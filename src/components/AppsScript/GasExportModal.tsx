@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Database, Code2, Copy, Check, ExternalLink, 
   Sparkles, FileCode, CheckCircle2, Globe, ShieldCheck, X
@@ -17,15 +17,19 @@ export const GasExportModal: React.FC<GasExportModalProps> = ({
   onSavedUrl
 }) => {
   const [activeTab, setActiveTab] = useState<'config' | 'code' | 'instructions'>('config');
-  const [webAppUrl, setWebAppUrl] = useState(StorageService.getGasWebAppUrl());
+  const [webAppUrl, setWebAppUrl] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
+  useEffect(() => {
+    if (isOpen) StorageService.getGasWebAppUrl().then(setWebAppUrl);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const handleSaveUrl = (e: React.FormEvent) => {
+  const handleSaveUrl = async (e: React.FormEvent) => {
     e.preventDefault();
-    StorageService.setGasWebAppUrl(webAppUrl.trim());
+    await StorageService.setGasWebAppUrl(webAppUrl.trim());
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
     onSavedUrl();

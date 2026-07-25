@@ -18,18 +18,15 @@ import { GasExportModal } from './components/AppsScript/GasExportModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
 export default function App() {
-  // Initialize Storage defaults
-  useEffect(() => {
-    StorageService.initStorage();
-    refreshState();
-  }, []);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getCurrentUser());
-  const [schoolConfig, setSchoolConfig] = useState<SchoolConfig>(() => StorageService.getSchoolConfig());
-  const [journals, setJournals] = useState<JournalEntry[]>(() => StorageService.getJournals());
-  const [classes, setClasses] = useState<ClassRoom[]>(() => StorageService.getClasses());
-  const [learningObjectives, setLearningObjectives] = useState<LearningObjective[]>(() => StorageService.getLearningObjectives());
-  const [users, setUsers] = useState<User[]>(() => StorageService.getUsers());
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [schoolConfig, setSchoolConfig] = useState<SchoolConfig | null>(null);
+  const [journals, setJournals] = useState<JournalEntry[]>([]);
+  const [classes, setClasses] = useState<ClassRoom[]>([]);
+  const [learningObjectives, setLearningObjectives] = useState<LearningObjective[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -38,18 +35,58 @@ export default function App() {
   const [showGasModal, setShowGasModal] = useState<boolean>(false);
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
 
-  const refreshState = () => {
-    setCurrentUser(StorageService.getCurrentUser());
-    setSchoolConfig(StorageService.getSchoolConfig());
-    setJournals(StorageService.getJournals());
-    setClasses(StorageService.getClasses());
-    setLearningObjectives(StorageService.getLearningObjectives());
-    setUsers(StorageService.getUsers());
+  const refreshState = async () => {
+    try {
+      const [user, school, journalList, classList, tpList, userList] = await Promise.all([
+        StorageService.getCurrentUser(),
+        StorageService.getSchoolConfig(),
+        StorageService.getJournals(),
+        StorageService.getClasses(),
+        StorageService.getLearningObjectives(),
+        StorageService.getUsers(),
+      ]);
+      setCurrentUser(user);
+      setSchoolConfig(school);
+      setJournals(journalList);
+      setClasses(classList);
+      setLearningObjectives(tpList);
+      setUsers(userList);
+      setLoadError(null);
+    } catch (err: any) {
+      console.error('Gagal memuat data dari Supabase:', err);
+      setLoadError(err?.message || 'Gagal terhubung ke database. Periksa konfigurasi Supabase (.env).');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Initialize Storage defaults + first load
+  useEffect(() => {
+    StorageService.initStorage().then(refreshState);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100/70 dark:bg-slate-950 text-slate-600 dark:text-slate-300">
+        Memuat data...
+      </div>
+    );
+  }
+
+  if (loadError || !currentUser || !schoolConfig) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-100/70 dark:bg-slate-950 p-6">
+        <div className="max-w-md text-center text-red-600 dark:text-red-400">
+          <p className="font-semibold mb-2">Tidak bisa terhubung ke database</p>
+          <p className="text-sm">{loadError || 'Data pengguna tidak ditemukan. Pastikan tabel users di Supabase sudah terisi.'}</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleSelectUser = (user: User) => {
     StorageService.setCurrentUser(user.id);
-    setCurrentUser(user);
+    setCurrentUser(user as User);
     // If switching to teacher and currently on admin-only tab, default to dashboard
     if (user.role === 'teacher' && (activeTab === 'teachers' || activeTab === 'reminders')) {
       setActiveTab('dashboard');

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, Send, MessageSquare, Mail, CheckCircle2, 
   Clock, AlertTriangle, ShieldCheck, History
@@ -14,8 +14,12 @@ interface ReminderCenterModalProps {
 export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teachers, journals }) => {
   const todayStr = new Date().toISOString().split('T')[0];
   
-  const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>(StorageService.getReminders());
+  const [reminderLogs, setReminderLogs] = useState<ReminderLog[]>([]);
   const [successToast, setSuccessToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    StorageService.getReminders().then(setReminderLogs);
+  }, []);
 
   // Active teaching teachers (excluding admin)
   const activeTeachers = teachers.filter(t => t.role === 'teacher');
@@ -24,7 +28,7 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
   const submittedTeacherIds = new Set(todayJournals.map(j => j.teacherId));
   const pendingTeachers = activeTeachers.filter(t => !submittedTeacherIds.has(t.id));
 
-  const handleSendReminder = (teacher: User, channel: 'whatsapp' | 'email' | 'in_app') => {
+  const handleSendReminder = async (teacher: User, channel: 'whatsapp' | 'email' | 'in_app') => {
     const message = `Yth. Bapak/Ibu ${teacher.name}, mohon untuk segera mengisikan Jurnal Harian Mengajar dan Absensi Siswa untuk hari ini (${new Date().toLocaleDateString('id-ID')}). Terima kasih.`;
 
     if (channel === 'whatsapp' && teacher.phone) {
@@ -44,8 +48,8 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
       status: 'sent'
     };
 
-    StorageService.addReminder(newLog);
-    setReminderLogs(StorageService.getReminders());
+    await StorageService.addReminder(newLog);
+    setReminderLogs(await StorageService.getReminders());
 
     setSuccessToast(`Pengingat ${channel.toUpperCase()} berhasil dikirimkan ke ${teacher.name}`);
     setTimeout(() => setSuccessToast(null), 3000);

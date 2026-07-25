@@ -42,9 +42,9 @@ export const JournalList: React.FC<JournalListProps> = ({
     return matchesSearch && matchesClass && matchesTeacher;
   });
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus jurnal harian ini?')) {
-      StorageService.deleteJournalEntry(id);
+      await StorageService.deleteJournalEntry(id);
       if (viewingJournal?.id === id) setViewingJournal(null);
       onRefresh();
     }

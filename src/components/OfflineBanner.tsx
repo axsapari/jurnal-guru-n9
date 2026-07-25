@@ -12,6 +12,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [gasUrl, setGasUrl] = useState<string>('');
 
   const updateStatus = () => {
     setIsOnline(navigator.onLine);
@@ -20,6 +21,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
 
   useEffect(() => {
     updateStatus();
+    StorageService.getGasWebAppUrl().then(setGasUrl);
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -48,7 +50,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
   const handleSync = async () => {
     if (isSyncing) return;
     setIsSyncing(true);
-    setSyncMessage('Menyinkronkan data jurnal ke Google Sheets...');
+    setSyncMessage('Menyinkronkan data jurnal ke database...');
 
     try {
       const result = await StorageService.syncAllPending();
@@ -66,8 +68,6 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
       setTimeout(() => setSyncMessage(null), 4000);
     }
   };
-
-  const gasUrl = StorageService.getGasWebAppUrl();
 
   return (
     <div className="w-full bg-slate-900 text-white border-b border-slate-800 text-xs py-2 px-4 shadow-sm">

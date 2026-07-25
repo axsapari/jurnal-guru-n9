@@ -55,17 +55,23 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   const [newTpDesc, setNewTpDesc] = useState('');
 
   const activeClass = classes.find(c => c.id === selectedClassId) || classes[0];
-  const studentsInClass = selectedClassId ? StorageService.getStudents(selectedClassId) : [];
+  const [studentsInClass, setStudentsInClass] = useState<Student[]>([]);
 
-  // Initialize attendance when class changes
+  // Fetch students & initialize attendance whenever the selected class changes
   useEffect(() => {
-    if (studentsInClass.length > 0) {
-      const initialAtt: Record<string, AttendanceStatus> = {};
-      studentsInClass.forEach(s => {
-        initialAtt[s.id] = 'hadir';
+    let cancelled = false;
+    if (selectedClassId) {
+      StorageService.getStudents(selectedClassId).then(list => {
+        if (cancelled) return;
+        setStudentsInClass(list);
+        const initialAtt: Record<string, AttendanceStatus> = {};
+        list.forEach(s => { initialAtt[s.id] = 'hadir'; });
+        setAttendance(initialAtt);
       });
-      setAttendance(initialAtt);
+    } else {
+      setStudentsInClass([]);
     }
+    return () => { cancelled = true; };
   }, [selectedClassId]);
 
   // Set all students as 'hadir'
@@ -123,7 +129,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   };
 
   // Inline TP Add
-  const handleSaveInlineTp = () => {
+  const handleSaveInlineTp = async () => {
     if (!newTpDesc.trim()) return;
     const code = newTpCode.trim() || `TP.${subject.slice(0,3).toUpperCase()}.${activeClass?.grade || '7'}.${learningObjectives.length + 1}`;
     
@@ -135,14 +141,14 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       description: newTpDesc.trim()
     };
 
-    StorageService.addLearningObjective(newTp);
+    await StorageService.addLearningObjective(newTp);
     setSelectedTpIds(prev => [...prev, newTp.id]);
     setNewTpCode('');
     setNewTpDesc('');
     setShowAddTpInline(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedClassId || !summary.trim()) {
@@ -190,7 +196,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       createdAt: new Date().toISOString()
     };
 
-    const saved = StorageService.saveJournalEntry(newJournal);
+    const saved = await StorageService.saveJournalEntry(newJournal);
     onSaved(saved.entry);
     onClose();
   };

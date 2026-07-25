@@ -31,7 +31,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
     return matchesSearch && matchesSubject;
   });
 
-  const handleAddTp = (e: React.FormEvent) => {
+  const handleAddTp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim()) return;
 
@@ -45,17 +45,16 @@ export const TpManagement: React.FC<TpManagementProps> = ({
       description: description.trim()
     };
 
-    StorageService.addLearningObjective(newTp);
+    await StorageService.addLearningObjective(newTp);
     setCode('');
     setDescription('');
     setShowAddModal(false);
     onRefresh();
   };
 
-  const handleDeleteTp = (id: string) => {
+  const handleDeleteTp = async (id: string) => {
     if (confirm('Hapus Tujuan Pembelajaran (TP) ini?')) {
-      const remaining = learningObjectives.filter(tp => tp.id !== id);
-      StorageService.saveLearningObjectives(remaining);
+      await StorageService.deleteLearningObjective(id);
       onRefresh();
     }
   };

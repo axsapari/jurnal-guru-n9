@@ -17,7 +17,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
   const [subject, setSubject] = useState('Matematika');
   const [role, setRole] = useState<'admin' | 'teacher'>('teacher');
 
-  const handleAddUser = (e: React.FormEvent) => {
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
@@ -32,8 +32,8 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
       avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150`
     };
 
-    const currentUsers = StorageService.getUsers();
-    StorageService.saveUsers([...currentUsers, newUser]);
+    const currentUsers = await StorageService.getUsers();
+    await StorageService.saveUsers([...currentUsers, newUser]);
 
     setName('');
     setNip('');
@@ -43,10 +43,9 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
     onRefresh();
   };
 
-  const handleDeleteUser = (id: string) => {
+  const handleDeleteUser = async (id: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
-      const remaining = users.filter(u => u.id !== id);
-      StorageService.saveUsers(remaining);
+      await StorageService.deleteUser(id);
       onRefresh();
     }
   };

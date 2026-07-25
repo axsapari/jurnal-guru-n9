@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Users, Plus, Trash2, Edit3, UserPlus, Search, 
   CheckCircle, ChevronRight, X, School
@@ -32,9 +32,21 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
   const [newStudentGender, setNewStudentGender] = useState<'L' | 'P'>('L');
 
   const activeClass = classes.find(c => c.id === selectedClassId) || classes[0];
-  const students = selectedClassId ? StorageService.getStudents(selectedClassId) : [];
+  const [students, setStudents] = useState<Student[]>([]);
 
-  const handleAddClass = (e: React.FormEvent) => {
+  useEffect(() => {
+    let cancelled = false;
+    if (selectedClassId) {
+      StorageService.getStudents(selectedClassId).then(list => {
+        if (!cancelled) setStudents(list);
+      });
+    } else {
+      setStudents([]);
+    }
+    return () => { cancelled = true; };
+  }, [selectedClassId]);
+
+  const handleAddClass = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClassName.trim()) return;
 
@@ -47,16 +59,16 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       studentCount: 0
     };
 
-    const currentClasses = StorageService.getClasses();
-    StorageService.saveClasses([...currentClasses, newClass]);
-    
+    const currentClasses = await StorageService.getClasses();
+    await StorageService.saveClasses([...currentClasses, newClass]);
+
     setNewClassName('');
     setShowAddClassModal(false);
     setSelectedClassId(newClass.id);
     onRefresh();
   };
 
-  const handleAddStudent = (e: React.FormEvent) => {
+  const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName.trim() || !selectedClassId) return;
 
@@ -68,7 +80,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       gender: newStudentGender
     };
 
-    StorageService.addStudent(newStudent);
+    await StorageService.addStudent(newStudent);
 
     // Update class student count
     const updatedClasses = classes.map(c => {
@@ -77,7 +89,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       }
       return c;
     });
-    StorageService.saveClasses(updatedClasses);
+    await StorageService.saveClasses(updatedClasses);
 
     setNewStudentName('');
     setNewStudentNisn('');
@@ -85,10 +97,10 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
     onRefresh();
   };
 
-  const handleDeleteStudent = (studentId: string) => {
+  const handleDeleteStudent = async (studentId: string) => {
     if (confirm('Apakah Anda yakin ingin menghapus siswa ini dari member kelas?')) {
-      const allStudents = StorageService.getStudents().filter(s => s.id !== studentId);
-      StorageService.saveStudents(allStudents);
+      await StorageService.deleteStudent(studentId);
+      setStudents(prev => prev.filter(s => s.id !== studentId));
       onRefresh();
     }
   };
