@@ -91,11 +91,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 dark:text-white">
               <TrendingUp size={18} className="text-indigo-600 dark:text-indigo-400" />
               <span>Capaian Jurnal Hari Ini ({new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })})</span>
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 dark:text-slate-500">
               {submittedCount} dari {teacherCount} guru mata pelajaran telah mengisi jurnal harian
             </p>
           </div>
@@ -121,7 +121,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <BookOpen size={24} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Jurnal Logged</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider dark:text-slate-500">Total Jurnal Logged</p>
             <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{journals.length}</p>
             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5 flex items-center gap-1">
               <CheckCircle size={12} /> {todayJournals.length} dibuat hari ini
@@ -135,9 +135,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <HeartPulse size={24} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Tingkat Kehadiran Siswa</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider dark:text-slate-500">Tingkat Kehadiran Siswa</p>
             <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{attendanceRate}%</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 dark:text-slate-500">
               Hadir: {totalHadir} | Sakit: {totalSakit} | Alpa: {totalAlpa}
             </p>
           </div>
@@ -149,9 +149,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <Users size={24} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Kelas Terdaftar</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider dark:text-slate-500">Kelas Terdaftar</p>
             <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">{classes.length} Kelas</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 dark:text-slate-500">
               Daftar siswa & member aktif
             </p>
           </div>
@@ -163,7 +163,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <Camera size={24} />
           </div>
           <div>
-            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Foto Laporan Drive</p>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider dark:text-slate-500">Foto Laporan Drive</p>
             <p className="text-2xl font-black text-slate-900 dark:text-white mt-0.5">
               {journals.filter(j => j.photoUrl).length} Foto
             </p>
@@ -179,11 +179,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
         {/* Left 2 Cols: Status Pengisian Guru */}
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 dark:text-white">
               <Users size={18} className="text-indigo-600 dark:text-indigo-400" />
               <span>Status Pengisian Guru Hari Ini</span>
             </h3>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Total {activeTeachers.length} Guru
             </span>
           </div>
@@ -194,7 +194,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               const teacherJournalCount = todayJournals.filter(j => j.teacherId === teacher.id).length;
 
               return (
-                <div key={teacher.id} className="p-3.5 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                <div key={teacher.id} className="p-3.5 flex items-center justify-between hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition dark:bg-slate-800/60">
                   <div className="flex items-center gap-3">
                     <img 
                       src={teacher.avatar} 
@@ -202,8 +202,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       className="w-9 h-9 rounded-xl object-cover ring-1 ring-slate-200 dark:ring-slate-700" 
                     />
                     <div>
-                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{teacher.name}</p>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400">{teacher.subject} • NIP: {teacher.nip}</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-slate-100 dark:text-white">{teacher.name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">{teacher.subject} • NIP: {teacher.nip}</p>
                     </div>
                   </div>
 
@@ -239,7 +239,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
         {/* Right 1 Col: Recent Visual Activity Feed */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 dark:text-white">
             <Camera size={18} className="text-rose-600 dark:text-rose-400" />
             <span>Laporan Visual Terbaru</span>
           </h3>
@@ -249,17 +249,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div 
                 key={j.id} 
                 onClick={() => onViewJournalDetails(j)}
-                className="group border border-slate-100 dark:border-slate-800 rounded-xl p-3 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xs transition cursor-pointer bg-slate-50/50 dark:bg-slate-800/30"
+                className="group border border-slate-100 dark:border-slate-800 rounded-xl p-3 hover:border-indigo-200 dark:hover:border-indigo-800 hover:shadow-xs transition cursor-pointer bg-slate-50/50 dark:bg-slate-800/30 dark:bg-slate-800/60"
               >
                 <div className="flex gap-3">
                   {j.photoUrl ? (
                     <img 
                       src={j.photoUrl} 
                       alt="Bukti Mengajar" 
-                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-90 border border-slate-200 dark:border-slate-700" 
+                      className="w-16 h-16 rounded-lg object-cover flex-shrink-0 group-hover:opacity-90 border border-slate-200 dark:border-slate-700 dark:border-slate-800" 
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0 text-xs">
+                    <div className="w-16 h-16 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0 text-xs dark:text-slate-500">
                       No Photo
                     </div>
                   )}
@@ -269,10 +269,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <span className="text-[10px] font-bold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/80 px-1.5 py-0.5 rounded">
                         Kelas {j.className}
                       </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500">{j.date}</span>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 dark:text-slate-400">{j.date}</span>
                     </div>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1 truncate">{j.subject}</p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">{j.teacherName}</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1 truncate dark:text-white">{j.subject}</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate dark:text-slate-500">{j.teacherName}</p>
                   </div>
                 </div>
               </div>

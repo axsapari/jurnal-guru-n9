@@ -6,9 +6,12 @@ export interface User {
   nip: string;
   email: string;
   role: UserRole;
-  subject?: string;
+  subject?: string; // deprecated: kept for backward compatibility, use `subjects`
+  subjects?: string[]; // a teacher may teach more than one subject
   avatar?: string;
   phone?: string;
+  passwordHash?: string;
+  mustChangePassword?: boolean;
 }
 
 export interface SchoolConfig {
@@ -98,4 +101,32 @@ export interface ReminderLog {
   message: string;
   sentAt: string;
   status: 'sent' | 'read';
+}
+
+// Jenis penilaian per kelas/mapel, contoh: "Tugas Harian" (bobot 20%), "UH" (30%), "UAS" (50%)
+export interface GradeType {
+  id: string;
+  classId: string;
+  subject: string;
+  name: string; // nama_jenis
+  weight: number; // bobot (%)
+  teacherId?: string;
+  semester: string;
+  academicYear: string;
+}
+
+// Satu nilai untuk satu siswa pada satu sesi penilaian (assessmentName), contoh: "Ulangan Bab 1"
+export interface Grade {
+  id: string;
+  studentId: string;
+  classId: string;
+  subject: string;
+  gradeTypeId: string;
+  assessmentName: string; // nama_penilaian
+  score: number; // 0-100
+  date: string;
+  tpId?: string;
+  teacherId: string;
+  semester: string;
+  academicYear: string;
 }

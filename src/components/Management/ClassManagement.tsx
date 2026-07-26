@@ -152,13 +152,13 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 dark:text-white">
             <School size={20} className="text-indigo-600" />
             <span>Kelola Kelas & Member Siswa</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 dark:text-slate-500">
             Manajemen rombel kelas dan daftar siswa untuk catatan kehadiran serta kejadian.
           </p>
         </div>
@@ -175,8 +175,8 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       {/* Class List Tabs & Student Detail Layout */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Left: Class Selection List */}
-        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2">
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 mb-2">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-2 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2 mb-2 dark:text-slate-500 dark:text-slate-400">
             Daftar Kelas ({classes.length})
           </p>
 
@@ -208,16 +208,16 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
         </div>
 
         {/* Right: Selected Class Member Students Table */}
-        <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+        <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800">
             <div>
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2 dark:text-white">
                 <span>Daftar Siswa Member Kelas {activeClass?.name}</span>
                 <span className="text-xs font-semibold bg-indigo-50 text-indigo-700 px-2.5 py-0.5 rounded-full border border-indigo-100">
                   {students.length} Siswa
                 </span>
               </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 dark:text-slate-500">
                 Mencakup NISN, Nama Lengkap, Jenis Kelamin untuk absensi
               </p>
             </div>
@@ -225,7 +225,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
             <div className="flex flex-wrap items-center gap-2">
               <button
                 onClick={() => ImportUtils.downloadStudentTemplate()}
-                className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5"
+                className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 dark:bg-slate-900 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700 dark:text-slate-500"
                 title="Download template Excel untuk diisi lalu diimpor"
               >
                 <FileDown size={15} />
@@ -266,9 +266,9 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
           )}
 
           {/* Students Table */}
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="border border-slate-200 rounded-xl overflow-hidden dark:border-slate-800">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px]">
+              <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] dark:bg-slate-800 dark:text-slate-300">
                 <tr>
                   <th className="px-3.5 py-3">No</th>
                   <th className="px-3.5 py-3">NISN</th>
@@ -277,19 +277,19 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   <th className="px-3.5 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 bg-white">
+              <tbody className="divide-y divide-slate-100 bg-white dark:bg-slate-900">
                 {students.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic">
+                    <td colSpan={5} className="px-4 py-8 text-center text-slate-400 italic dark:text-slate-500 dark:text-slate-400">
                       Belum ada siswa di kelas ini. Klik "+ Tambah Member Siswa" untuk menambah.
                     </td>
                   </tr>
                 ) : (
                   students.map((std, idx) => (
-                    <tr key={std.id} className="hover:bg-slate-50">
-                      <td className="px-3.5 py-2.5 font-bold text-slate-500">{idx + 1}</td>
-                      <td className="px-3.5 py-2.5 font-mono text-slate-600">{std.nisn}</td>
-                      <td className="px-3.5 py-2.5 font-bold text-slate-900">{std.name}</td>
+                    <tr key={std.id} className="hover:bg-slate-50 dark:bg-slate-800/60">
+                      <td className="px-3.5 py-2.5 font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500">{idx + 1}</td>
+                      <td className="px-3.5 py-2.5 font-mono text-slate-600 dark:text-slate-400 dark:text-slate-500">{std.nisn}</td>
+                      <td className="px-3.5 py-2.5 font-bold text-slate-900 dark:text-white">{std.name}</td>
                       <td className="px-3.5 py-2.5 text-center">
                         <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
                           std.gender === 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
@@ -300,7 +300,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                       <td className="px-3.5 py-2.5 text-right">
                         <button
                           onClick={() => handleDeleteStudent(std.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer"
+                          className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
                         >
                           <Trash2 size={15} />
                         </button>
@@ -317,33 +317,33 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       {/* Add Class Modal */}
       {showAddClassModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Tambah Kelas Baru</h3>
-              <button onClick={() => setShowAddClassModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4 dark:bg-slate-900 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <h3 className="font-bold text-slate-900 text-base dark:text-white">Tambah Kelas Baru</h3>
+              <button onClick={() => setShowAddClassModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleAddClass} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Nama Kelas</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Nama Kelas</label>
                 <input
                   type="text"
                   placeholder="misal: 7A, 8B, 9C"
                   value={newClassName}
                   onChange={e => setNewClassName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Tingkat Kelas</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Tingkat Kelas</label>
                 <select
                   value={newClassGrade}
                   onChange={e => setNewClassGrade(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 dark:text-white dark:border-slate-700"
                 >
                   <option value="7">Kelas 7</option>
                   <option value="8">Kelas 8</option>
@@ -355,11 +355,11 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Wali Kelas</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Wali Kelas</label>
                 <select
                   value={newClassTeacher}
                   onChange={e => setNewClassTeacher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 dark:text-white dark:border-slate-700"
                 >
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
@@ -371,7 +371,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddClassModal(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer dark:bg-slate-800 dark:text-slate-300"
                 >
                   Batal
                 </button>
@@ -390,40 +390,40 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       {/* Add Student Modal */}
       {showAddStudentModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-slate-900 text-base">Tambah Member Siswa Ke Kelas {activeClass?.name}</h3>
-              <button onClick={() => setShowAddStudentModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4 dark:bg-slate-900 dark:border-slate-800">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+              <h3 className="font-bold text-slate-900 text-base dark:text-white">Tambah Member Siswa Ke Kelas {activeClass?.name}</h3>
+              <button onClick={() => setShowAddStudentModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
                 <X size={18} />
               </button>
             </div>
 
             <form onSubmit={handleAddStudent} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Nama Lengkap Siswa</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Nama Lengkap Siswa</label>
                 <input
                   type="text"
                   placeholder="misal: Muhammad Rizky"
                   value={newStudentName}
                   onChange={e => setNewStudentName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">NISN (Nomor Induk Siswa Nasional)</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">NISN (Nomor Induk Siswa Nasional)</label>
                 <input
                   type="text"
                   placeholder="0098765432"
                   value={newStudentNisn}
                   onChange={e => setNewStudentNisn(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900 dark:text-white dark:border-slate-700"
                 />
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+                <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Jenis Kelamin</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer font-semibold">
                     <input
@@ -450,7 +450,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddStudentModal(false)}
-                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer"
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer dark:bg-slate-800 dark:text-slate-300"
                 >
                   Batal
                 </button>

@@ -29,8 +29,11 @@ create table if not exists users (
   email text default '',
   role text not null check (role in ('admin', 'teacher')),
   subject text,
+  subjects jsonb default '[]', -- daftar mata pelajaran (guru bisa mengajar >1 mapel)
   avatar text,
-  phone text
+  phone text,
+  password_hash text, -- SHA-256 hex; 'CHANGE_ON_FIRST_LOGIN' artinya belum diset
+  must_change_password boolean default true
 );
 
 -- 3. Kelas
@@ -102,6 +105,34 @@ create table if not exists app_settings (
   value text
 );
 
+-- 9. Jenis Penilaian (per kelas & mapel), contoh: Tugas Harian (20%), UH (30%), UAS (50%)
+create table if not exists grade_types (
+  id text primary key,
+  class_id text references classes(id) on delete cascade,
+  subject text not null,
+  name text not null,
+  weight numeric default 0,
+  teacher_id text references users(id) on delete set null,
+  semester text default 'Ganjil',
+  academic_year text default ''
+);
+
+-- 10. Nilai siswa
+create table if not exists grades (
+  id text primary key,
+  student_id text references students(id) on delete cascade,
+  class_id text references classes(id) on delete cascade,
+  subject text not null,
+  grade_type_id text references grade_types(id) on delete cascade,
+  assessment_name text not null,
+  score numeric not null,
+  date date,
+  tp_id text references learning_objectives(id) on delete set null,
+  teacher_id text references users(id) on delete set null,
+  semester text default 'Ganjil',
+  academic_year text default ''
+);
+
 -- ============================================================
 -- Row Level Security
 -- CATATAN PENTING: skema di bawah ini membuka akses baca/tulis
@@ -120,6 +151,8 @@ alter table learning_objectives enable row level security;
 alter table journal_entries enable row level security;
 alter table reminders enable row level security;
 alter table app_settings enable row level security;
+alter table grade_types enable row level security;
+alter table grades enable row level security;
 
 create policy "public read/write school_config" on school_config for all using (true) with check (true);
 create policy "public read/write users" on users for all using (true) with check (true);
@@ -129,6 +162,8 @@ create policy "public read/write learning_objectives" on learning_objectives for
 create policy "public read/write journal_entries" on journal_entries for all using (true) with check (true);
 create policy "public read/write reminders" on reminders for all using (true) with check (true);
 create policy "public read/write app_settings" on app_settings for all using (true) with check (true);
+create policy "public read/write grade_types" on grade_types for all using (true) with check (true);
+create policy "public read/write grades" on grades for all using (true) with check (true);
 
 -- ============================================================
 -- Storage bucket untuk logo sekolah & logo pemerintah kota/kabupaten
@@ -154,6 +189,6 @@ create policy "public update logos" on storage.objects
 insert into school_config (id, school_name) values (1, 'Nama Sekolah Anda')
   on conflict (id) do nothing;
 
-insert into users (id, name, nip, email, role) values
-  ('usr-admin', 'Administrator', '-', 'admin@sekolah.sch.id', 'admin')
+insert into users (id, name, nip, email, role, password_hash, must_change_password) values
+  ('usr-admin', 'Administrator', '-', 'admin@sekolah.sch.id', 'admin', 'CHANGE_ON_FIRST_LOGIN', true)
   on conflict (id) do nothing;

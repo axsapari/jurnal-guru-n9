@@ -58,13 +58,13 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 dark:text-white">
             <Bell size={20} className="text-rose-600" />
             <span>Sistem Notifikasi Pengingat Guru</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 dark:text-slate-500">
             Ingatkan guru yang belum mencatat kegiatan mengajar dan absensi hari ini secara otomatis via WhatsApp & Notifikasi System.
           </p>
         </div>
@@ -86,8 +86,8 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left 2 Cols: Pending Teachers */}
-        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <div className="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 dark:text-white">
             <Clock size={18} className="text-amber-600" />
             <span>Daftar Guru Belum Mengisi Hari Ini ({pendingTeachers.length})</span>
           </h3>
@@ -99,14 +99,14 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
               <p className="text-xs text-emerald-700">Luar biasa! Seluruh guru telah melengkapi kegiatan mengajar dan absensi siswa hari ini.</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden">
+            <div className="divide-y divide-slate-100 border border-slate-100 rounded-2xl overflow-hidden dark:border-slate-800">
               {pendingTeachers.map(teacher => (
-                <div key={teacher.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition">
+                <div key={teacher.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition dark:bg-slate-800/60">
                   <div className="flex items-center gap-3">
                     <img src={teacher.avatar} alt={teacher.name} className="w-10 h-10 rounded-xl object-cover ring-1 ring-slate-200" />
                     <div>
-                      <p className="text-xs font-bold text-slate-900">{teacher.name}</p>
-                      <p className="text-[11px] text-slate-500">{teacher.subject} • NIP: {teacher.nip}</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">{teacher.name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">{teacher.subject} • NIP: {teacher.nip}</p>
                       <p className="text-[10px] text-indigo-600 font-mono mt-0.5">WA: {teacher.phone || '-'}</p>
                     </div>
                   </div>
@@ -135,23 +135,23 @@ export const ReminderCenterModal: React.FC<ReminderCenterModalProps> = ({ teache
         </div>
 
         {/* Right 1 Col: Log Pengingat Sent */}
-        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+        <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 dark:text-white">
             <History size={18} className="text-indigo-600" />
             <span>Riwayat Pengingat Terkirim</span>
           </h3>
 
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {reminderLogs.length === 0 ? (
-              <p className="text-xs text-slate-400 italic p-4 text-center border border-dashed border-slate-200 rounded-xl">
+              <p className="text-xs text-slate-400 italic p-4 text-center border border-dashed border-slate-200 rounded-xl dark:text-slate-500 dark:border-slate-800 dark:text-slate-400">
                 Belum ada pengingat dikirimkan hari ini.
               </p>
             ) : (
               reminderLogs.map(log => (
-                <div key={log.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
+                <div key={log.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1 dark:bg-slate-800/60 dark:border-slate-800">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">{log.teacherName}</span>
-                    <span className="text-[10px] font-bold text-slate-500">{log.sentAt}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{log.teacherName}</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500">{log.sentAt}</span>
                   </div>
                   <p className="text-[10px] text-indigo-700 font-semibold uppercase">
                     Channel: {log.channel}

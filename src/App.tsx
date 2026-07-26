@@ -4,6 +4,8 @@ import { User, SchoolConfig, ClassRoom, LearningObjective, JournalEntry } from '
 
 // Components
 import { Header } from './components/Header';
+import { SideNav } from './components/SideNav';
+import { LoginScreen } from './components/LoginScreen';
 import { OfflineBanner } from './components/OfflineBanner';
 import { AdminDashboard } from './components/Dashboard/AdminDashboard';
 import { TeacherDashboard } from './components/Dashboard/TeacherDashboard';
@@ -13,6 +15,7 @@ import { ReportGeneratorModal } from './components/Reports/ReportGeneratorModal'
 import { ClassManagement } from './components/Management/ClassManagement';
 import { TpManagement } from './components/Management/TpManagement';
 import { TeacherManagement } from './components/Management/TeacherManagement';
+import { GradesManagement } from './components/Grades/GradesManagement';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
@@ -33,22 +36,26 @@ export default function App() {
   const [showJournalModal, setShowJournalModal] = useState<boolean>(false);
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
 
-  const refreshState = async () => {
+  const refreshState = async (activeUserId?: string) => {
     try {
-      const [user, school, journalList, classList, tpList, userList] = await Promise.all([
-        StorageService.getCurrentUser(),
+      const [school, journalList, classList, tpList, userList] = await Promise.all([
         StorageService.getSchoolConfig(),
         StorageService.getJournals(),
         StorageService.getClasses(),
         StorageService.getLearningObjectives(),
         StorageService.getUsers(),
       ]);
-      setCurrentUser(user);
       setSchoolConfig(school);
       setJournals(journalList);
       setClasses(classList);
       setLearningObjectives(tpList);
       setUsers(userList);
+
+      const sessionId = activeUserId || StorageService.getSession();
+      if (sessionId) {
+        const match = userList.find(u => u.id === sessionId);
+        if (match) setCurrentUser(match);
+      }
       setLoadError(null);
     } catch (err: any) {
       console.error('Gagal memuat data dari Supabase:', err);
@@ -58,9 +65,9 @@ export default function App() {
     }
   };
 
-  // Initialize Storage defaults + first load
+  // Initial boot: load public data (school branding) + resume session if any
   useEffect(() => {
-    StorageService.initStorage().then(refreshState);
+    StorageService.initStorage().then(() => refreshState());
   }, []);
 
   if (isLoading) {
@@ -71,24 +78,34 @@ export default function App() {
     );
   }
 
-  if (loadError || !currentUser || !schoolConfig) {
+  if (loadError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100/70 dark:bg-slate-950 p-6">
         <div className="max-w-md text-center text-red-600 dark:text-red-400">
           <p className="font-semibold mb-2">Tidak bisa terhubung ke database</p>
-          <p className="text-sm">{loadError || 'Data pengguna tidak ditemukan. Pastikan tabel users di Supabase sudah terisi.'}</p>
+          <p className="text-sm">{loadError}</p>
         </div>
       </div>
     );
   }
 
-  const handleSelectUser = (user: User) => {
-    StorageService.setCurrentUser(user.id);
-    setCurrentUser(user as User);
-    // If switching to teacher and currently on admin-only tab, default to dashboard
-    if (user.role === 'teacher' && (activeTab === 'teachers' || activeTab === 'reminders')) {
-      setActiveTab('dashboard');
-    }
+  // Not logged in yet -> show login screen instead of the app
+  if (!currentUser) {
+    return (
+      <LoginScreen
+        schoolConfig={schoolConfig}
+        onLoggedIn={(user) => {
+          setCurrentUser(user);
+          refreshState(user.id);
+        }}
+      />
+    );
+  }
+
+  const handleLogout = () => {
+    StorageService.clearSession();
+    setCurrentUser(null);
+    setActiveTab('dashboard');
   };
 
   const handleJournalSaved = () => {
@@ -114,16 +131,25 @@ export default function App() {
       <Header
         currentUser={currentUser}
         allUsers={users}
-        schoolConfig={schoolConfig}
+        schoolConfig={schoolConfig!}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        onSelectUser={handleSelectUser}
+        onSelectUser={() => {}}
         onOpenSchoolSettings={() => setShowSchoolSettingsModal(true)}
+        onLogout={handleLogout}
+        pendingReminderCount={pendingReminderCount}
+      />
+
+      {/* Right-side vertical navigation rail (desktop) */}
+      <SideNav
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isAdmin={isAdmin}
         pendingReminderCount={pendingReminderCount}
       />
 
       {/* Main Workspace Body */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 md:mr-20 max-w-7xl">
         {/* TAB 1: Dashboard Analitik */}
         {activeTab === 'dashboard' && (
           isAdmin ? (
@@ -164,17 +190,26 @@ export default function App() {
           />
         )}
 
-        {/* TAB 3: Laporan & Kop Surat */}
+        {/* TAB 3: Nilai (Penilaian) */}
+        {activeTab === 'grades' && (
+          <GradesManagement
+            currentUser={currentUser}
+            classes={classes}
+            learningObjectives={learningObjectives}
+          />
+        )}
+
+        {/* TAB 4: Laporan */}
         {activeTab === 'reports' && (
           <ReportGeneratorModal
             journals={journals}
-            schoolConfig={schoolConfig}
+            schoolConfig={schoolConfig!}
             classes={classes}
             teachers={users}
           />
         )}
 
-        {/* TAB 4: Kelas & Siswa */}
+        {/* TAB 5: Kelas & Siswa */}
         {activeTab === 'classes' && (
           <ClassManagement
             classes={classes}
@@ -183,7 +218,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 5: Tujuan Pembelajaran (TP) */}
+        {/* TAB 6: Tujuan Pembelajaran (TP) */}
         {activeTab === 'tp' && (
           <TpManagement
             learningObjectives={learningObjectives}
@@ -191,7 +226,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 6: Kelola Guru (Admin) */}
+        {/* TAB 7: Kelola Guru (Admin) */}
         {activeTab === 'teachers' && isAdmin && (
           <TeacherManagement
             users={users}
@@ -199,7 +234,7 @@ export default function App() {
           />
         )}
 
-        {/* TAB 7: Pengingat Guru (Admin) */}
+        {/* TAB 8: Pengingat Guru (Admin) */}
         {activeTab === 'reminders' && isAdmin && (
           <ReminderCenterModal
             teachers={users}
@@ -222,7 +257,7 @@ export default function App() {
       <SchoolSettingsModal
         isOpen={showSchoolSettingsModal}
         onClose={() => setShowSchoolSettingsModal(false)}
-        schoolConfig={schoolConfig}
+        schoolConfig={schoolConfig!}
         onSaved={refreshState}
       />
     </div>

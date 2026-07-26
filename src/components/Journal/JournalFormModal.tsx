@@ -210,7 +210,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-100 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 dark:bg-slate-900 dark:border-slate-800">
         
         {/* Modal Header */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between flex-shrink-0">
@@ -220,7 +220,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-sm sm:text-base">Input Jurnal Harian & Absensi Siswa</h3>
-              <p className="text-xs text-slate-400">Pengisian terpadu kegiatan mengajar & catatan kelas</p>
+              <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">Pengisian terpadu kegiatan mengajar & catatan kelas</p>
             </div>
           </div>
 
@@ -235,9 +235,9 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
         {/* Modal Form Body */}
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6">
           {/* Section 1: Tanggal, Kelas, Jam & Mapel */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/70">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/70 dark:bg-slate-800/60 dark:border-slate-800">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1 dark:text-slate-300">
                 <Calendar size={13} className="text-indigo-600" /> Tanggal
               </label>
               <input
@@ -245,19 +245,19 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 value={date}
                 onChange={e => setDate(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-white dark:border-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1 dark:text-slate-300">
                 <BookOpen size={13} className="text-indigo-600" /> Pilih Kelas
               </label>
               <select
                 value={selectedClassId}
                 onChange={e => setSelectedClassId(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer dark:bg-slate-900 dark:text-white dark:border-slate-700"
               >
                 {classes.map(c => (
                   <option key={c.id} value={c.id}>
@@ -268,7 +268,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1 dark:text-slate-300">
                 <Clock size={13} className="text-indigo-600" /> Jam Ke- / Waktu
               </label>
               <input
@@ -277,12 +277,12 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 onChange={e => setTimeSlot(e.target.value)}
                 placeholder="misal: Jam ke 1-2 (07:30 - 09:00)"
                 required
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-white dark:border-slate-700"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1 dark:text-slate-300">
                 <FileText size={13} className="text-indigo-600" /> Mata Pelajaran
               </label>
               <input
@@ -290,7 +290,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 required
-                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-white dark:border-slate-700"
               />
             </div>
           </div>
@@ -298,7 +298,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
           {/* Section 2: Tujuan Pembelajaran (TP) Selection */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <label className="text-xs font-bold text-slate-900 flex items-center gap-1.5 dark:text-white">
                 <Target size={15} className="text-indigo-600" />
                 <span>Pilih Tujuan Pembelajaran (TP) Dituju</span>
               </label>
@@ -321,21 +321,21 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                     placeholder="Kode TP (misal: TP.MAT.7.3)"
                     value={newTpCode}
                     onChange={e => setNewTpCode(e.target.value)}
-                    className="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs"
+                    className="px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs dark:bg-slate-900"
                   />
                   <input
                     type="text"
                     placeholder="Uraian Tujuan Pembelajaran..."
                     value={newTpDesc}
                     onChange={e => setNewTpDesc(e.target.value)}
-                    className="sm:col-span-2 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs"
+                    className="sm:col-span-2 px-3 py-1.5 bg-white border border-indigo-200 rounded-lg text-xs dark:bg-slate-900"
                   />
                 </div>
                 <div className="flex justify-end gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => setShowAddTpInline(false)}
-                    className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold"
+                    className="px-2.5 py-1 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold dark:text-slate-300"
                   >
                     Batal
                   </button>
@@ -350,9 +350,9 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               </div>
             )}
 
-            <div className="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="space-y-1.5 max-h-40 overflow-y-auto p-2 bg-slate-50 rounded-2xl border border-slate-200 dark:bg-slate-800/60 dark:border-slate-800">
               {availableTps.length === 0 ? (
-                <p className="text-xs text-slate-500 italic p-2 text-center">
+                <p className="text-xs text-slate-500 italic p-2 text-center dark:text-slate-400 dark:text-slate-500">
                   Belum ada TP untuk mata pelajaran ini. Klik "+ Tambah TP Baru" di atas.
                 </p>
               ) : (
@@ -392,7 +392,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
           {/* Section 3: Ringkasan Kegiatan Pembelajaran */}
           <div>
-            <label className="block text-xs font-bold text-slate-900 mb-1.5 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-900 mb-1.5 flex items-center gap-1.5 dark:text-white">
               <FileText size={15} className="text-indigo-600" /> Uraian Kegiatan Pembelajaran / Ringkasan Materi
             </label>
             <textarea
@@ -401,19 +401,19 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               onChange={e => setSummary(e.target.value)}
               placeholder="Jelaskan metode pembelajaran, materi yang disampaikan, kendala kelas, serta tindak lanjut..."
               required
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-2xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none leading-relaxed"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-2xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none leading-relaxed dark:bg-slate-900 dark:text-white dark:border-slate-700"
             ></textarea>
           </div>
 
           {/* Section 4: Absensi Siswa */}
           <div className="space-y-3 pt-2">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
               <div>
-                <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5 dark:text-white">
                   <UserCheck size={16} className="text-emerald-600" />
                   <span>Absensi Siswa Kelas {activeClass?.name} ({studentsInClass.length} Siswa)</span>
                 </h4>
-                <p className="text-[11px] text-slate-500">Tandai status kehadiran siswa per pertemuan</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">Tandai status kehadiran siswa per pertemuan</p>
               </div>
 
               <button
@@ -426,9 +426,9 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
             </div>
 
             {/* Students Attendance Table */}
-            <div className="border border-slate-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto">
+            <div className="border border-slate-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto dark:border-slate-800">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] sticky top-0">
+                <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] sticky top-0 dark:bg-slate-800 dark:text-slate-300">
                   <tr>
                     <th className="px-3 py-2">No</th>
                     <th className="px-3 py-2">NISN</th>
@@ -436,14 +436,14 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                     <th className="px-3 py-2 text-center">Status Kehadiran</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 bg-white">
+                <tbody className="divide-y divide-slate-100 bg-white dark:bg-slate-900">
                   {studentsInClass.map((student, idx) => {
                     const currentStatus = attendance[student.id] || 'hadir';
                     return (
-                      <tr key={student.id} className="hover:bg-slate-50">
-                        <td className="px-3 py-2 font-semibold text-slate-500">{idx + 1}</td>
-                        <td className="px-3 py-2 text-slate-500 font-mono text-[11px]">{student.nisn}</td>
-                        <td className="px-3 py-2 font-bold text-slate-900">{student.name}</td>
+                      <tr key={student.id} className="hover:bg-slate-50 dark:bg-slate-800/60">
+                        <td className="px-3 py-2 font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{idx + 1}</td>
+                        <td className="px-3 py-2 text-slate-500 font-mono text-[11px] dark:text-slate-400 dark:text-slate-500">{student.nisn}</td>
+                        <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">{student.name}</td>
                         <td className="px-3 py-2">
                           <div className="flex items-center justify-center gap-1">
                             {[
@@ -477,17 +477,17 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
           {/* Section 5: Catatan Kejadian / Kejadian Khusus Siswa */}
           <div className="space-y-3 pt-2">
-            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5 dark:text-white">
               <AlertCircle size={15} className="text-amber-600" />
               <span>Catatan Kejadian / Kejadian Khusus Siswa</span>
             </h4>
 
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3">
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-3 dark:bg-slate-800/60 dark:border-slate-800">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
                 <select
                   value={newIncidentStudentId}
                   onChange={e => setNewIncidentStudentId(e.target.value)}
-                  className="px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold dark:bg-slate-900 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                 >
                   <option value="">-- Pilih Siswa --</option>
                   {studentsInClass.map(s => (
@@ -498,7 +498,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 <select
                   value={newIncidentCategory}
                   onChange={e => setNewIncidentCategory(e.target.value as any)}
-                  className="px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold"
+                  className="px-3 py-2 bg-white border border-slate-300 rounded-xl font-semibold dark:bg-slate-900 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                 >
                   <option value="catatan">Catatan Umum / Kesehatan</option>
                   <option value="prestasi">Prestasi / Keaktifan</option>
@@ -510,7 +510,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                   placeholder="Isi catatan kejadian..."
                   value={newIncidentNote}
                   onChange={e => setNewIncidentNote(e.target.value)}
-                  className="sm:col-span-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs"
+                  className="sm:col-span-2 px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs dark:bg-slate-900 dark:border-slate-700 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -527,16 +527,16 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               {incidents.length > 0 && (
                 <div className="space-y-1.5 pt-2">
                   {incidents.map(inc => (
-                    <div key={inc.id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs">
+                    <div key={inc.id} className="flex items-center justify-between p-2 bg-white rounded-xl border border-slate-200 text-xs dark:bg-slate-900 dark:border-slate-800">
                       <div>
-                        <span className="font-bold text-slate-900">{inc.studentName}</span>
+                        <span className="font-bold text-slate-900 dark:text-white">{inc.studentName}</span>
                         <span className={`ml-2 px-2 py-0.5 rounded text-[10px] font-bold ${
                           inc.category === 'prestasi' ? 'bg-emerald-100 text-emerald-800' :
                           inc.category === 'pelanggaran' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800'
                         }`}>
                           {inc.category.toUpperCase()}
                         </span>
-                        <p className="text-slate-600 mt-0.5">{inc.note}</p>
+                        <p className="text-slate-600 mt-0.5 dark:text-slate-400 dark:text-slate-500">{inc.note}</p>
                       </div>
 
                       <button
@@ -555,22 +555,22 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
           {/* Section 6: Foto Laporan Visual (Upload / Drive) */}
           <div className="space-y-2 pt-2">
-            <label className="block text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <label className="block text-xs font-bold text-slate-900 flex items-center gap-1.5 dark:text-white">
               <Camera size={15} className="text-rose-600" />
               <span>Foto Laporan Visual Mengajar (Otomatis Simpan ke Drive)</span>
             </label>
 
-            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl p-4 bg-slate-50 text-center transition">
+            <div className="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl p-4 bg-slate-50 text-center transition dark:bg-slate-800/60 dark:border-slate-700 text-slate-900 dark:text-slate-100">
               {photoUrl ? (
                 <div className="space-y-3">
                   <img 
                     src={photoUrl} 
                     alt="Preview Laporan" 
-                    className="max-h-48 mx-auto rounded-xl border border-slate-200 object-cover shadow-xs" 
+                    className="max-h-48 mx-auto rounded-xl border border-slate-200 object-cover shadow-xs dark:border-slate-800" 
                   />
-                  <div className="text-xs text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200 max-w-md mx-auto">
-                    <p className="font-bold text-slate-900">{photoFileName}</p>
-                    <p className="text-[10px] text-slate-500">ID Drive: {photoDriveId}</p>
+                  <div className="text-xs text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200 max-w-md mx-auto dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:text-slate-500">
+                    <p className="font-bold text-slate-900 dark:text-white">{photoFileName}</p>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500">ID Drive: {photoDriveId}</p>
                   </div>
                   <button
                     type="button"
@@ -589,10 +589,10 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                   <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
                     <Upload size={22} />
                   </div>
-                  <p className="text-xs font-bold text-slate-800">
+                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                     Klik untuk Ambil Foto / Pilih File
                   </p>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     File foto akan secara otomatis diberi nama ID sesuai Kelas & Tanggal
                   </p>
                   <input
@@ -607,8 +607,8 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
           </div>
 
           {/* Footer Submit Button */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-between">
-            <div className="text-xs text-slate-500 flex items-center gap-1">
+          <div className="pt-4 border-t border-slate-200 flex items-center justify-between dark:border-slate-800">
+            <div className="text-xs text-slate-500 flex items-center gap-1 dark:text-slate-400 dark:text-slate-500">
               <Shield size={14} className="text-emerald-600" />
               <span>Dukungan Mode Offline & Auto-Sync Google Sheets</span>
             </div>
@@ -617,7 +617,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition cursor-pointer dark:bg-slate-800 dark:text-slate-300"
               >
                 Batal
               </button>

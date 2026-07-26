@@ -56,7 +56,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 bg-indigo-600 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold">
+            <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center font-bold dark:bg-slate-900">
               <Building2 size={20} />
             </div>
             <div>
@@ -65,7 +65,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer">
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer dark:bg-slate-900">
             <X size={18} />
           </button>
         </div>
@@ -81,8 +81,8 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
           )}
 
           {/* Section 1: Logo Kop Surat */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-4">
-            <label className="block font-bold text-slate-900 dark:text-slate-100 text-xs">
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-4 dark:border-slate-800">
+            <label className="block font-bold text-slate-900 dark:text-slate-100 text-xs dark:text-white">
               1. Logo Kop Surat (Kiri: Pemerintah Kota/Kab. — Kanan: Sekolah)
             </label>
 
@@ -95,18 +95,18 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Logo Kota/Kabupaten */}
               <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
+                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs dark:border-slate-800">
                   {formData.cityLogoUrl ? (
                     <img src={formData.cityLogoUrl} alt="Logo Kota/Kabupaten" className="w-16 h-16 object-contain" />
                   ) : (
-                    <ImageIcon className="text-slate-400" size={28} />
+                    <ImageIcon className="text-slate-400 dark:text-slate-500" size={28} />
                   )}
                 </div>
                 <div className="flex-1 w-full space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                     Logo Pemerintah Kota/Kabupaten (kiri)
                   </label>
-                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition">
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition dark:text-slate-400">
                     <Upload size={13} />
                     {uploadingLogo === 'city' ? 'Mengupload...' : 'Upload Gambar'}
                     <input
@@ -122,25 +122,25 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                     value={formData.cityLogoUrl || ''}
                     onChange={e => setFormData({ ...formData, cityLogoUrl: e.target.value })}
                     placeholder="atau tempel URL gambar di sini"
-                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100 dark:text-white"
                   />
                 </div>
               </div>
 
               {/* Logo Sekolah */}
               <div className="flex flex-col sm:flex-row items-center gap-3">
-                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
+                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs dark:border-slate-800">
                   {formData.logoUrl ? (
                     <img src={formData.logoUrl} alt="Logo Sekolah" className="w-16 h-16 object-contain" />
                   ) : (
-                    <ImageIcon className="text-slate-400" size={28} />
+                    <ImageIcon className="text-slate-400 dark:text-slate-500" size={28} />
                   )}
                 </div>
                 <div className="flex-1 w-full space-y-1.5">
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">
                     Logo Sekolah (kanan)
                   </label>
-                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition">
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition dark:text-slate-400">
                     <Upload size={13} />
                     {uploadingLogo === 'school' ? 'Mengupload...' : 'Upload Gambar'}
                     <input
@@ -156,20 +156,20 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                     value={formData.logoUrl}
                     onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
                     placeholder="atau tempel URL gambar di sini"
-                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100 dark:text-white"
                   />
                 </div>
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500">
               Gambar yang diupload disimpan otomatis di Supabase Storage (bucket "logos") — tidak perlu hosting gambar terpisah.
             </p>
           </div>
 
           {/* Section 2: Identitas Sekolah */}
           <div className="space-y-3">
-            <h4 className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-1 text-xs">
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-1 text-xs dark:text-white">
               2. Identitas Lembaga & Kop Surat
             </h4>
 
@@ -182,7 +182,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.schoolName}
                   onChange={e => setFormData({ ...formData, schoolName: e.target.value })}
                   placeholder="SMP NEGERI 1 NUSANTARA"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -193,7 +193,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.npsn}
                   onChange={e => setFormData({ ...formData, npsn: e.target.value })}
                   placeholder="20234567"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -205,7 +205,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                 value={formData.address}
                 onChange={e => setFormData({ ...formData, address: e.target.value })}
                 placeholder="Jl. Pendidikan No. 45, Kecamatan Cerdas"
-                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"
+                className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100"
               />
             </div>
 
@@ -217,7 +217,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.city}
                   onChange={e => setFormData({ ...formData, city: e.target.value })}
                   placeholder="Kota Pendidikan"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -228,7 +228,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.province}
                   onChange={e => setFormData({ ...formData, province: e.target.value })}
                   placeholder="Jawa Barat"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -241,7 +241,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.phone}
                   onChange={e => setFormData({ ...formData, phone: e.target.value })}
                   placeholder="(021) 555-0199"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -252,7 +252,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
                   placeholder="info@smpn1.sch.id"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -263,7 +263,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.website}
                   onChange={e => setFormData({ ...formData, website: e.target.value })}
                   placeholder="www.smpn1.sch.id"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -271,7 +271,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
 
           {/* Section 3: Kepala Sekolah */}
           <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs">
+            <h4 className="font-bold text-slate-900 dark:text-slate-100 text-xs dark:text-white">
               3. Data Kepala Sekolah (Tanda Tangan Laporan)
             </h4>
 
@@ -284,7 +284,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.headmasterName}
                   onChange={e => setFormData({ ...formData, headmasterName: e.target.value })}
                   placeholder="Drs. H. Ahmad Wijaya, M.Pd."
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -295,7 +295,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
                   value={formData.headmasterNip}
                   onChange={e => setFormData({ ...formData, headmasterNip: e.target.value })}
                   placeholder="19680315 199303 1 004"
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -303,7 +303,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
 
           {/* Footer Actions */}
           <div className="pt-4 flex items-center justify-between border-t border-slate-200 dark:border-slate-800">
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">
               * Perubahan akan langsung berlaku pada seluruh halaman Kop Surat & Laporan Cetak.
             </p>
 

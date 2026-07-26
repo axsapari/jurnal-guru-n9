@@ -88,9 +88,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       )}
 
       {/* My Journal History List */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-xs space-y-4 dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 dark:text-white">
             <BookOpen size={18} className="text-indigo-600" />
             <span>Riwayat Jurnal Harian Saya ({myJournals.length})</span>
           </h3>
@@ -103,7 +103,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         </div>
 
         {myJournals.length === 0 ? (
-          <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs">
+          <div className="text-center py-10 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-800 dark:text-slate-500">
             Belum ada riwayat jurnal harian. Klik tombol di atas untuk mengisi jurnal pertama Anda.
           </div>
         ) : (
@@ -112,26 +112,26 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <div
                 key={j.id}
                 onClick={() => onViewJournalDetails(j)}
-                className="border border-slate-200 hover:border-indigo-300 rounded-2xl p-4 hover:shadow-md transition cursor-pointer bg-white space-y-3"
+                className="border border-slate-200 hover:border-indigo-300 rounded-2xl p-4 hover:shadow-md transition cursor-pointer bg-white space-y-3 dark:bg-slate-900 dark:border-slate-800"
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg">
                     Kelas {j.className}
                   </span>
-                  <span className="text-xs text-slate-500 font-medium">{j.date}</span>
+                  <span className="text-xs text-slate-500 font-medium dark:text-slate-400 dark:text-slate-500">{j.date}</span>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900">{j.subject}</h4>
-                  <p className="text-xs text-slate-500 mt-0.5">{j.timeSlot}</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{j.subject}</h4>
+                  <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400 dark:text-slate-500">{j.timeSlot}</p>
                 </div>
 
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-2 rounded-lg">
+                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50 p-2 rounded-lg dark:bg-slate-800/60 dark:text-slate-400 dark:text-slate-500">
                   {j.summary}
                 </p>
 
-                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-2 text-slate-500">
+                <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 dark:text-slate-500">
                     <Users size={14} className="text-indigo-500" />
                     <span>Hadir: {j.attendanceSummary.hadir}/{j.attendanceSummary.total}</span>
                   </div>

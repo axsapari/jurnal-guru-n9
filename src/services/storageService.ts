@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 import {
-  User, SchoolConfig, ClassRoom, Student, LearningObjective, JournalEntry, ReminderLog
+  User, SchoolConfig, ClassRoom, Student, LearningObjective, JournalEntry, ReminderLog, GradeType, Grade
 } from '../types';
 
 // Device-local only: which user profile this browser is "acting as", and
@@ -9,7 +9,21 @@ import {
 const LOCAL_KEYS = {
   CURRENT_USER_ID: 'jurnal_current_user_id',
   PENDING_JOURNALS: 'jurnal_pending_journals',
+  SESSION_USER_ID: 'jurnal_session_user_id',
 };
+
+const userFromDb = (r: any): User => ({
+  id: r.id, name: r.name, nip: r.nip, email: r.email, role: r.role,
+  subject: r.subject, subjects: Array.isArray(r.subjects) ? r.subjects : (r.subject ? [r.subject] : []),
+  avatar: r.avatar, phone: r.phone,
+  passwordHash: r.password_hash, mustChangePassword: r.must_change_password,
+});
+const userToDb = (u: User) => ({
+  id: u.id, name: u.name, nip: u.nip, email: u.email, role: u.role,
+  subject: u.subjects?.[0] ?? u.subject ?? '', subjects: u.subjects ?? (u.subject ? [u.subject] : []),
+  avatar: u.avatar, phone: u.phone,
+  password_hash: u.passwordHash, must_change_password: u.mustChangePassword ?? true,
+});
 
 // ---------- mappers: camelCase (app) <-> snake_case (db) ----------
 
@@ -66,6 +80,28 @@ const journalToDb = (j: JournalEntry) => ({
   summary: j.summary, attendance: j.attendance, attendance_summary: j.attendanceSummary,
   incidents: j.incidents, photo_url: j.photoUrl ?? null, photo_drive_id: j.photoDriveId ?? null,
   photo_file_name: j.photoFileName ?? null, sync_status: j.syncStatus, created_at: j.createdAt,
+});
+
+const gradeTypeFromDb = (r: any): GradeType => ({
+  id: r.id, classId: r.class_id, subject: r.subject, name: r.name, weight: Number(r.weight) || 0,
+  teacherId: r.teacher_id ?? undefined, semester: r.semester, academicYear: r.academic_year,
+});
+const gradeTypeToDb = (t: GradeType) => ({
+  id: t.id, class_id: t.classId, subject: t.subject, name: t.name, weight: t.weight,
+  teacher_id: t.teacherId ?? null, semester: t.semester, academic_year: t.academicYear,
+});
+
+const gradeFromDb = (r: any): Grade => ({
+  id: r.id, studentId: r.student_id, classId: r.class_id, subject: r.subject,
+  gradeTypeId: r.grade_type_id, assessmentName: r.assessment_name, score: Number(r.score),
+  date: r.date, tpId: r.tp_id ?? undefined, teacherId: r.teacher_id,
+  semester: r.semester, academicYear: r.academic_year,
+});
+const gradeToDb = (g: Grade) => ({
+  id: g.id, student_id: g.studentId, class_id: g.classId, subject: g.subject,
+  grade_type_id: g.gradeTypeId, assessment_name: g.assessmentName, score: g.score,
+  date: g.date, tp_id: g.tpId ?? null, teacher_id: g.teacherId,
+  semester: g.semester, academic_year: g.academicYear,
 });
 
 const reminderFromDb = (r: any): ReminderLog => ({
@@ -126,17 +162,64 @@ export class StorageService {
   static async getUsers(): Promise<User[]> {
     const { data, error } = await supabase.from('users').select('*').order('name');
     assertOk(error, 'getUsers');
-    return (data ?? []) as User[];
+    return (data ?? []).map(userFromDb);
   }
 
   static async saveUsers(users: User[]): Promise<void> {
-    const { error } = await supabase.from('users').upsert(users);
+    const { error } = await supabase.from('users').upsert(users.map(userToDb));
     assertOk(error, 'saveUsers');
   }
 
   static async deleteUser(id: string): Promise<void> {
     const { error } = await supabase.from('users').delete().eq('id', id);
     assertOk(error, 'deleteUser');
+  }
+
+  // ---------- Auth / Session ----------
+  // Session token = logged-in user's id, kept in sessionStorage (cleared when
+  // the browser tab closes). See src/utils/authUtils.ts for the caveat about
+  // what level of security this actually provides.
+
+  static getSession(): string | null {
+    return sessionStorage.getItem(LOCAL_KEYS.SESSION_USER_ID);
+  }
+
+  static clearSession(): void {
+    sessionStorage.removeItem(LOCAL_KEYS.SESSION_USER_ID);
+  }
+
+  // Logs in by email + password. Handles first-login (password not yet set)
+  // by adopting whatever password is entered as the new one, mirroring the
+  // reference app's "CHANGE_ON_FIRST_LOGIN" flow.
+  static async login(email: string, password: string): Promise<User> {
+    const { sha256, FIRST_LOGIN_SENTINEL } = await import('../utils/authUtils');
+    const hash = await sha256(password);
+
+    const { data, error } = await supabase.from('users').select('*').ilike('email', email.trim()).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) throw new Error('Email tidak ditemukan.');
+
+    let user = userFromDb(data);
+
+    if (!user.passwordHash || user.passwordHash === FIRST_LOGIN_SENTINEL) {
+      // First login: adopt the entered password as this account's password.
+      const { error: upErr } = await supabase.from('users').update({ password_hash: hash, must_change_password: false }).eq('id', user.id);
+      assertOk(upErr, 'login (set first password)');
+      user = { ...user, passwordHash: hash, mustChangePassword: false };
+    } else if (user.passwordHash !== hash) {
+      throw new Error('Password salah.');
+    }
+
+    sessionStorage.setItem(LOCAL_KEYS.SESSION_USER_ID, user.id);
+    return user;
+  }
+
+  // Admin action: reset a teacher's password back to "not set" so they can
+  // set a fresh one the next time they log in.
+  static async resetPassword(userId: string): Promise<void> {
+    const { FIRST_LOGIN_SENTINEL } = await import('../utils/authUtils');
+    const { error } = await supabase.from('users').update({ password_hash: FIRST_LOGIN_SENTINEL, must_change_password: true }).eq('id', userId);
+    assertOk(error, 'resetPassword');
   }
 
   static async getCurrentUser(): Promise<User> {
@@ -279,5 +362,45 @@ export class StorageService {
   static async addReminder(reminder: ReminderLog): Promise<void> {
     const { error } = await supabase.from('reminders').insert(reminderToDb(reminder));
     assertOk(error, 'addReminder');
+  }
+
+  // ---------- Penilaian (Grades) ----------
+
+  static async getGradeTypes(): Promise<GradeType[]> {
+    const { data, error } = await supabase.from('grade_types').select('*').order('name');
+    assertOk(error, 'getGradeTypes');
+    return (data ?? []).map(gradeTypeFromDb);
+  }
+
+  static async addGradeType(gradeType: GradeType): Promise<void> {
+    const { error } = await supabase.from('grade_types').insert(gradeTypeToDb(gradeType));
+    assertOk(error, 'addGradeType');
+  }
+
+  static async saveGradeTypes(gradeTypes: GradeType[]): Promise<void> {
+    const { error } = await supabase.from('grade_types').upsert(gradeTypes.map(gradeTypeToDb));
+    assertOk(error, 'saveGradeTypes');
+  }
+
+  static async deleteGradeType(id: string): Promise<void> {
+    const { error } = await supabase.from('grade_types').delete().eq('id', id);
+    assertOk(error, 'deleteGradeType');
+  }
+
+  static async getGrades(): Promise<Grade[]> {
+    const { data, error } = await supabase.from('grades').select('*');
+    assertOk(error, 'getGrades');
+    return (data ?? []).map(gradeFromDb);
+  }
+
+  // Upsert a batch of grades in one call (used when saving a whole score-entry table at once)
+  static async saveGrades(grades: Grade[]): Promise<void> {
+    const { error } = await supabase.from('grades').upsert(grades.map(gradeToDb));
+    assertOk(error, 'saveGrades');
+  }
+
+  static async deleteGrade(id: string): Promise<void> {
+    const { error } = await supabase.from('grades').delete().eq('id', id);
+    assertOk(error, 'deleteGrade');
   }
 }
