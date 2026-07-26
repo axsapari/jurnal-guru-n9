@@ -31,9 +31,7 @@ export const SideNav: React.FC<SideNavProps> = ({ activeTab, setActiveTab, isAdm
 
   return (
     <nav
-      className="hidden md:flex flex-col items-center gap-1 fixed right-0 top-16 bottom-0 w-20 py-4
-                 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-20
-                 overflow-y-auto scrollbar-none"
+      className="hidden md:flex flex-col items-center gap-1 fixed right-0 top-16 bottom-0 w-20 py-4 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 z-20 overflow-y-auto scrollbar-none"
       aria-label="Navigasi utama"
     >
       {navItems.map(item => {

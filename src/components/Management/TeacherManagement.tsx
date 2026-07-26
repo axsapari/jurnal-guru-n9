@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { UserCheck, Plus, Trash2, Edit, Phone, Mail, X, KeyRound, Check } from 'lucide-react';
-import { User } from '../../types';
+import { User, ClassRoom } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { SUBJECTS } from '../../data/subjects';
 
 interface TeacherManagementProps {
   users: User[];
+  classes: ClassRoom[];
   onRefresh: () => void;
 }
 
@@ -15,18 +17,17 @@ const emptyForm = {
   email: '',
   phone: '',
   subjects: [] as string[],
+  classIds: [] as string[],
   role: 'teacher' as 'admin' | 'teacher',
 };
 
-export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onRefresh }) => {
+export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, classes, onRefresh }) => {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [subjectInput, setSubjectInput] = useState('');
   const [resetFeedback, setResetFeedback] = useState<string | null>(null);
 
   const openAddModal = () => {
     setForm(emptyForm);
-    setSubjectInput('');
     setShowModal(true);
   };
 
@@ -38,23 +39,24 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
       email: u.email,
       phone: u.phone || '',
       subjects: u.subjects && u.subjects.length > 0 ? u.subjects : (u.subject ? [u.subject] : []),
+      classIds: u.classIds || [],
       role: u.role,
     });
-    setSubjectInput('');
     setShowModal(true);
   };
 
-  const addSubjectChip = () => {
-    const val = subjectInput.trim();
-    if (!val) return;
-    if (!form.subjects.includes(val)) {
-      setForm(prev => ({ ...prev, subjects: [...prev.subjects, val] }));
-    }
-    setSubjectInput('');
+  const toggleSubject = (subj: string) => {
+    setForm(prev => ({
+      ...prev,
+      subjects: prev.subjects.includes(subj) ? prev.subjects.filter(s => s !== subj) : [...prev.subjects, subj],
+    }));
   };
 
-  const removeSubjectChip = (subj: string) => {
-    setForm(prev => ({ ...prev, subjects: prev.subjects.filter(s => s !== subj) }));
+  const toggleClass = (classId: string) => {
+    setForm(prev => ({
+      ...prev,
+      classIds: prev.classIds.includes(classId) ? prev.classIds.filter(c => c !== classId) : [...prev.classIds, classId],
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,6 +76,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
         role: form.role,
         subjects: form.subjects,
         subject: form.subjects[0] || '',
+        classIds: form.classIds,
       } : u);
       await StorageService.saveUsers(updated);
     } else {
@@ -87,6 +90,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
         role: form.role,
         subjects: form.subjects,
         subject: form.subjects[0] || '',
+        classIds: form.classIds,
         avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150`,
         passwordHash: 'CHANGE_ON_FIRST_LOGIN',
         mustChangePassword: true,
@@ -240,33 +244,56 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Mata Pelajaran (boleh lebih dari satu)
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-1.5">
-                  {form.subjects.map(s => (
-                    <span key={s} className="flex items-center gap-1 text-[11px] bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2 py-1 rounded-lg font-semibold">
-                      {s}
-                      <button type="button" onClick={() => removeSubjectChip(s)} className="hover:text-rose-600 cursor-pointer">
-                        <X size={11} />
+                <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 dark:border-slate-700 rounded-xl max-h-32 overflow-y-auto bg-slate-50 dark:bg-slate-800/60">
+                  {SUBJECTS.map(subj => {
+                    const active = form.subjects.includes(subj);
+                    return (
+                      <button
+                        type="button"
+                        key={subj}
+                        onClick={() => toggleSubject(subj)}
+                        className={`text-[11px] px-2 py-1 rounded-lg font-semibold transition cursor-pointer ${
+                          active
+                            ? 'bg-indigo-600 text-white'
+                            : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                        }`}
+                      >
+                        {subj}
                       </button>
-                    </span>
-                  ))}
+                    );
+                  })}
                 </div>
-                <div className="flex gap-1.5">
-                  <input
-                    type="text"
-                    value={subjectInput}
-                    onChange={e => setSubjectInput(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSubjectChip(); } }}
-                    placeholder="misal: Matematika, lalu Enter"
-                    className="flex-1 px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-slate-900 dark:text-slate-100 dark:bg-slate-900 dark:text-white"
-                  />
-                  <button
-                    type="button"
-                    onClick={addSubjectChip}
-                    className="px-3 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl font-bold cursor-pointer dark:text-slate-300"
-                  >
-                    + Tambah
-                  </button>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Kelas yang Diampu
+                </label>
+                <div className="flex flex-wrap gap-1.5 p-2 border border-slate-200 dark:border-slate-700 rounded-xl max-h-32 overflow-y-auto bg-slate-50 dark:bg-slate-800/60">
+                  {classes.length === 0 && (
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500">Belum ada kelas dibuat.</span>
+                  )}
+                  {classes.map(c => {
+                    const active = form.classIds.includes(c.id);
+                    return (
+                      <button
+                        type="button"
+                        key={c.id}
+                        onClick={() => toggleClass(c.id)}
+                        className={`text-[11px] px-2 py-1 rounded-lg font-semibold transition cursor-pointer ${
+                          active
+                            ? 'bg-emerald-600 text-white'
+                            : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
                 </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+                  Kosongkan (jangan pilih kelas apapun) kalau guru ini boleh akses semua kelas.
+                </p>
               </div>
 
               <div>

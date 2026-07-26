@@ -15,12 +15,14 @@ const LOCAL_KEYS = {
 const userFromDb = (r: any): User => ({
   id: r.id, name: r.name, nip: r.nip, email: r.email, role: r.role,
   subject: r.subject, subjects: Array.isArray(r.subjects) ? r.subjects : (r.subject ? [r.subject] : []),
+  classIds: Array.isArray(r.class_ids) ? r.class_ids : [],
   avatar: r.avatar, phone: r.phone,
   passwordHash: r.password_hash, mustChangePassword: r.must_change_password,
 });
 const userToDb = (u: User) => ({
   id: u.id, name: u.name, nip: u.nip, email: u.email, role: u.role,
   subject: u.subjects?.[0] ?? u.subject ?? '', subjects: u.subjects ?? (u.subject ? [u.subject] : []),
+  class_ids: u.classIds ?? [],
   avatar: u.avatar, phone: u.phone,
   password_hash: u.passwordHash, must_change_password: u.mustChangePassword ?? true,
 });
@@ -30,12 +32,14 @@ const userToDb = (u: User) => ({
 const schoolFromDb = (r: any): SchoolConfig => ({
   schoolName: r.school_name, npsn: r.npsn, address: r.address, phone: r.phone,
   email: r.email, website: r.website, logoUrl: r.logo_url, cityLogoUrl: r.city_logo_url,
+  governmentLine1: r.government_line1, governmentLine2: r.government_line2,
   headmasterName: r.headmaster_name, headmasterNip: r.headmaster_nip,
   city: r.city, province: r.province,
 });
 const schoolToDb = (c: SchoolConfig) => ({
   id: 1, school_name: c.schoolName, npsn: c.npsn, address: c.address, phone: c.phone,
   email: c.email, website: c.website, logo_url: c.logoUrl, city_logo_url: c.cityLogoUrl ?? '',
+  government_line1: c.governmentLine1 ?? '', government_line2: c.governmentLine2 ?? '',
   headmaster_name: c.headmasterName, headmaster_nip: c.headmasterNip,
   city: c.city, province: c.province,
 });
@@ -135,7 +139,7 @@ export class StorageService {
     assertOk(error, 'getSchoolConfig');
     return data ? schoolFromDb(data) : {
       schoolName: '', npsn: '', address: '', phone: '', email: '', website: '',
-      logoUrl: '', cityLogoUrl: '', headmasterName: '', headmasterNip: '', city: '', province: '',
+      logoUrl: '', cityLogoUrl: '', governmentLine1: '', governmentLine2: '', headmasterName: '', headmasterNip: '', city: '', province: '',
     };
   }
 

@@ -8,6 +8,7 @@ import {
   JournalEntry, AttendanceStatus, IncidentRecord 
 } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { SUBJECTS } from '../../data/subjects';
 
 interface JournalFormModalProps {
   isOpen: boolean;
@@ -28,11 +29,23 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
 
+  // Guru hanya melihat kelas yang diampu (kalau daftar classIds-nya diisi admin);
+  // kalau kosong (belum diset) atau role admin, tampilkan semua kelas.
+  const scopedClasses = (currentUser.role === 'admin' || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
+
+  // Guru hanya bisa pilih mapel yang diampunya; admin bisa pilih semua mapel resmi sekolah.
+  const subjectOptions = currentUser.role === 'admin'
+    ? SUBJECTS
+    : (currentUser.subjects && currentUser.subjects.length > 0 ? currentUser.subjects : (currentUser.subject ? [currentUser.subject] : SUBJECTS));
+
   const [date, setDate] = useState(todayStr);
-  const [selectedClassId, setSelectedClassId] = useState(classes[0]?.id || '');
-  const [subject, setSubject] = useState(currentUser.subject || 'Matematika');
+  const [selectedClassId, setSelectedClassId] = useState(scopedClasses[0]?.id || '');
+  const [subject, setSubject] = useState(subjectOptions[0] || '');
   const [timeSlot, setTimeSlot] = useState('Jam ke 1-2 (07:30 - 09:00)');
   const [selectedTpIds, setSelectedTpIds] = useState<string[]>([]);
+  const [tpSearchQuery, setTpSearchQuery] = useState('');
   const [summary, setSummary] = useState('');
   
   // Attendance state: studentId -> status
@@ -54,7 +67,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   const [newTpCode, setNewTpCode] = useState('');
   const [newTpDesc, setNewTpDesc] = useState('');
 
-  const activeClass = classes.find(c => c.id === selectedClassId) || classes[0];
+  const activeClass = scopedClasses.find(c => c.id === selectedClassId) || scopedClasses[0];
   const [studentsInClass, setStudentsInClass] = useState<Student[]>([]);
 
   // Fetch students & initialize attendance whenever the selected class changes
@@ -203,10 +216,15 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Filter TP for selected subject
-  const availableTps = learningObjectives.filter(
-    tp => tp.subject.toLowerCase() === subject.toLowerCase() || tp.grade === activeClass?.grade
-  );
+  // TP hanya yang sesuai kelas (tingkat) DAN mata pelajaran yang dipilih,
+  // supaya daftarnya tidak kepanjangan dan tidak salah pilih TP mapel lain.
+  const availableTps = learningObjectives.filter(tp => {
+    const matchesClassSubject = tp.subject.toLowerCase() === subject.toLowerCase() && tp.grade === activeClass?.grade;
+    if (!matchesClassSubject) return false;
+    if (!tpSearchQuery.trim()) return true;
+    const q = tpSearchQuery.toLowerCase();
+    return tp.code.toLowerCase().includes(q) || tp.description.toLowerCase().includes(q);
+  });
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -259,7 +277,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 required
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer dark:bg-slate-900 dark:text-white dark:border-slate-700"
               >
-                {classes.map(c => (
+                {scopedClasses.map(c => (
                   <option key={c.id} value={c.id}>
                     Kelas {c.name} ({c.studentCount || 30} Siswa)
                   </option>
@@ -285,13 +303,14 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1 dark:text-slate-300">
                 <FileText size={13} className="text-indigo-600" /> Mata Pelajaran
               </label>
-              <input
-                type="text"
+              <select
                 value={subject}
                 onChange={e => setSubject(e.target.value)}
                 required
                 className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-white dark:border-slate-700"
-              />
+              >
+                {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
           </div>
 
@@ -311,6 +330,14 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 <Plus size={14} /> + Tambah TP Baru
               </button>
             </div>
+
+            <input
+              type="text"
+              value={tpSearchQuery}
+              onChange={e => setTpSearchQuery(e.target.value)}
+              placeholder="Cari nomor TP atau kata kunci deskripsi..."
+              className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-2 focus:ring-indigo-500 focus:outline-none dark:bg-slate-900 dark:text-white dark:border-slate-700"
+            />
 
             {showAddTpInline && (
               <div className="p-3.5 bg-indigo-50/70 rounded-2xl border border-indigo-200 space-y-2 text-xs animate-in fade-in duration-150">
@@ -363,8 +390,8 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                       key={tp.id}
                       className={`flex items-start gap-2.5 p-2 rounded-xl text-xs transition cursor-pointer border ${
                         isChecked 
-                          ? 'bg-indigo-50 border-indigo-300 text-indigo-950 font-medium' 
-                          : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
+                          ? 'bg-indigo-50 dark:bg-indigo-950/50 border-indigo-300 dark:border-indigo-700 text-indigo-950 dark:text-indigo-200 font-medium' 
+                          : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
                     >
                       <input
@@ -440,7 +467,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                   {studentsInClass.map((student, idx) => {
                     const currentStatus = attendance[student.id] || 'hadir';
                     return (
-                      <tr key={student.id} className="hover:bg-slate-50 dark:bg-slate-800/60">
+                      <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
                         <td className="px-3 py-2 font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{idx + 1}</td>
                         <td className="px-3 py-2 text-slate-500 font-mono text-[11px] dark:text-slate-400 dark:text-slate-500">{student.nisn}</td>
                         <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">{student.name}</td>

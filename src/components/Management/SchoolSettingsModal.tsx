@@ -173,6 +173,29 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
               2. Identitas Lembaga & Kop Surat
             </h4>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Baris 1 Kop Surat (Instansi Induk)</label>
+                <input
+                  type="text"
+                  value={formData.governmentLine1 || ''}
+                  onChange={e => setFormData({ ...formData, governmentLine1: e.target.value })}
+                  placeholder="PEMERINTAH KOTA BANJAR"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100"
+                />
+              </div>
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Baris 2 Kop Surat (Dinas)</label>
+                <input
+                  type="text"
+                  value={formData.governmentLine2 || ''}
+                  onChange={e => setFormData({ ...formData, governmentLine2: e.target.value })}
+                  placeholder="DINAS PENDIDIKAN DAN KEBUDAYAAN"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-slate-100"
+                />
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-2">
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Resmi Sekolah</label>

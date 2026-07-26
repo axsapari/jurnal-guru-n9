@@ -18,3 +18,12 @@
   color: #94a3b8; /* slate-400, lighter for dark backgrounds */
   opacity: 1;
 }
+
+/* Tell the browser to render native widgets (select dropdowns, checkboxes,
+   scrollbars, date pickers) using its dark palette when dark mode is on.
+   Without this, a <select> styled dark still shows a white dropdown list
+   with light text from the OS, making the highlighted/hovered option
+   unreadable. */
+.dark {
+  color-scheme: dark;
+}

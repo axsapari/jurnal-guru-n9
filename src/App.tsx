@@ -230,6 +230,7 @@ export default function App() {
         {activeTab === 'teachers' && isAdmin && (
           <TeacherManagement
             users={users}
+            classes={classes}
             onRefresh={refreshState}
           />
         )}

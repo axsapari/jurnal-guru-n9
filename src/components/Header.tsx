@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenSchoolSettings}
               title="Ubah Detail Sekolah, Logo & Kop Surat"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer text-xs font-semibold dark:bg-slate-800/60 dark:text-slate-300"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer text-xs font-semibold dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               <Building2 size={15} className="text-indigo-600 dark:text-indigo-400" />
               <span className="hidden lg:inline">Identitas Sekolah</span>
@@ -106,7 +106,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={toggleDarkMode}
               title={isDarkMode ? "Ganti ke Mode Terang" : "Ganti ke Mode Gelap"}
-              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer dark:bg-slate-800/60 dark:text-slate-300"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
             >
               {isDarkMode ? (
                 <Sun size={17} className="text-amber-400" />
@@ -119,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="relative">
               <button
                 onClick={() => setShowUserDropdown(!showUserDropdown)}
-                className="flex items-center gap-2.5 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer text-left dark:bg-slate-800/60 dark:border-slate-700"
+                className="flex items-center gap-2.5 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer text-left dark:bg-slate-800/60 dark:border-slate-700 dark:hover:bg-slate-800"
               >
                 <img
                   src={currentUser.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150'}

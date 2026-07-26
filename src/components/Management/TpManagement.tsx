@@ -114,7 +114,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => ImportUtils.downloadTpTemplate()}
-            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 dark:bg-slate-900 dark:bg-slate-800/60 dark:text-slate-400 dark:border-slate-700 dark:text-slate-500"
+            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-800/60"
             title="Download template Excel untuk diisi lalu diimpor"
           >
             <FileDown size={15} />
@@ -200,7 +200,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
               </tr>
             ) : (
               filteredTps.map(tp => (
-                <tr key={tp.id} className="hover:bg-slate-50/80 dark:bg-slate-800/60">
+                <tr key={tp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/60">
                   <td className="px-4 py-3 font-mono font-bold text-indigo-700">{tp.code}</td>
                   <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{tp.subject}</td>
                   <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">Kelas {tp.grade}</td>

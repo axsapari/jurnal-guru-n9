@@ -14,6 +14,8 @@ create table if not exists school_config (
   website text default '',
   logo_url text default '',
   city_logo_url text default '',
+  government_line1 text default '',
+  government_line2 text default '',
   headmaster_name text default '',
   headmaster_nip text default '',
   city text default '',
@@ -30,6 +32,7 @@ create table if not exists users (
   role text not null check (role in ('admin', 'teacher')),
   subject text,
   subjects jsonb default '[]', -- daftar mata pelajaran (guru bisa mengajar >1 mapel)
+  class_ids jsonb default '[]', -- daftar kelas yang diampu guru ini (dipakai untuk filter kelas/TP/jurnal)
   avatar text,
   phone text,
   password_hash text, -- SHA-256 hex; 'CHANGE_ON_FIRST_LOGIN' artinya belum diset

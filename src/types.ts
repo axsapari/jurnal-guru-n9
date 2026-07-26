@@ -8,6 +8,7 @@ export interface User {
   role: UserRole;
   subject?: string; // deprecated: kept for backward compatibility, use `subjects`
   subjects?: string[]; // a teacher may teach more than one subject
+  classIds?: string[]; // which classes this teacher is assigned to (used to filter classes/TP/journal options)
   avatar?: string;
   phone?: string;
   passwordHash?: string;
@@ -23,6 +24,8 @@ export interface SchoolConfig {
   website?: string;
   logoUrl: string;
   cityLogoUrl?: string;
+  governmentLine1?: string; // e.g. "PEMERINTAH KOTA BANJAR"
+  governmentLine2?: string; // e.g. "DINAS PENDIDIKAN DAN KEBUDAYAAN"
   headmasterName: string;
   headmasterNip: string;
   city: string;

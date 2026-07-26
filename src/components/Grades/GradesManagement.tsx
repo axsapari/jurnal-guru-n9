@@ -16,12 +16,16 @@ const DEFAULT_ACADEMIC_YEAR = '2025/2026';
 type Tab = 'input' | 'weights' | 'recap';
 
 export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser, classes, learningObjectives }) => {
-  const teacherSubjects = currentUser.subjects && currentUser.subjects.length > 0
-    ? currentUser.subjects
-    : (currentUser.subject ? [currentUser.subject] : ['Umum']);
+  const teacherSubjects = currentUser.role === 'admin'
+    ? (currentUser.subjects && currentUser.subjects.length > 0 ? currentUser.subjects : ['Umum'])
+    : (currentUser.subjects && currentUser.subjects.length > 0 ? currentUser.subjects : (currentUser.subject ? [currentUser.subject] : ['Umum']));
+
+  const scopedClasses = (currentUser.role === 'admin' || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
 
   const [tab, setTab] = useState<Tab>('input');
-  const [classId, setClassId] = useState(classes[0]?.id || '');
+  const [classId, setClassId] = useState(scopedClasses[0]?.id || '');
   const [subject, setSubject] = useState(teacherSubjects[0]);
 
   const [students, setStudents] = useState<Student[]>([]);
@@ -198,7 +202,7 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
               onChange={e => setClassId(e.target.value)}
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 rounded-xl text-sm font-semibold text-slate-900 dark:text-slate-100 dark:bg-slate-900 dark:text-white"
             >
-              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              {scopedClasses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div>
