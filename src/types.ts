@@ -19,6 +19,7 @@ export interface SchoolConfig {
   email: string;
   website?: string;
   logoUrl: string;
+  cityLogoUrl?: string;
   headmasterName: string;
   headmasterNip: string;
   city: string;

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Users, Plus, Trash2, Edit3, UserPlus, Search, 
-  CheckCircle, ChevronRight, X, School
+  CheckCircle, ChevronRight, X, School, FileDown, UploadCloud
 } from 'lucide-react';
 import { ClassRoom, Student, User } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { ImportUtils } from '../../utils/importUtils';
 
 interface ClassManagementProps {
   classes: ClassRoom[];
@@ -33,6 +34,8 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
 
   const activeClass = classes.find(c => c.id === selectedClassId) || classes[0];
   const [students, setStudents] = useState<Student[]>([]);
+  const [isImportingStudents, setIsImportingStudents] = useState(false);
+  const [importFeedback, setImportFeedback] = useState<{ type: 'success' | 'error'; summary: string; details: string[] } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -102,6 +105,48 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
       await StorageService.deleteStudent(studentId);
       setStudents(prev => prev.filter(s => s.id !== studentId));
       onRefresh();
+    }
+  };
+
+  const handleImportStudents = async (file: File | null) => {
+    if (!file || !selectedClassId) return;
+    setIsImportingStudents(true);
+    setImportFeedback(null);
+
+    try {
+      const { rows, errors } = await ImportUtils.parseStudents(file);
+
+      if (rows.length === 0) {
+        setImportFeedback({ type: 'error', summary: 'Tidak ada data siswa valid yang bisa diimpor dari file ini.', details: errors });
+        return;
+      }
+
+      const newStudents: Student[] = rows.map(r => ({
+        id: 'std-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+        classId: selectedClassId,
+        nisn: r.nisn || `00${Math.floor(Math.random() * 899999 + 100000)}`,
+        name: r.name,
+        gender: r.gender,
+      }));
+
+      await StorageService.saveStudents(newStudents);
+      setStudents(prev => [...prev, ...newStudents]);
+
+      const updatedClasses = classes.map(c =>
+        c.id === selectedClassId ? { ...c, studentCount: (c.studentCount || 0) + newStudents.length } : c
+      );
+      await StorageService.saveClasses(updatedClasses);
+
+      setImportFeedback({
+        type: 'success',
+        summary: `Berhasil mengimpor ${newStudents.length} siswa ke kelas ${activeClass?.name}.`,
+        details: errors,
+      });
+      onRefresh();
+    } catch (err: any) {
+      setImportFeedback({ type: 'error', summary: `Gagal membaca file: ${err?.message || 'format file tidak dikenali'}`, details: [] });
+    } finally {
+      setIsImportingStudents(false);
     }
   };
 
@@ -177,14 +222,48 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
               </p>
             </div>
 
-            <button
-              onClick={() => setShowAddStudentModal(true)}
-              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-            >
-              <UserPlus size={15} />
-              <span>+ Tambah Member Siswa</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => ImportUtils.downloadStudentTemplate()}
+                className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5"
+                title="Download template Excel untuk diisi lalu diimpor"
+              >
+                <FileDown size={15} />
+                <span>Template</span>
+              </button>
+
+              <label className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+                <UploadCloud size={15} />
+                <span>{isImportingStudents ? 'Mengimpor...' : 'Impor Siswa'}</span>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className="hidden"
+                  disabled={isImportingStudents || !selectedClassId}
+                  onChange={e => handleImportStudents(e.target.files?.[0] || null)}
+                />
+              </label>
+
+              <button
+                onClick={() => setShowAddStudentModal(true)}
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <UserPlus size={15} />
+                <span>+ Tambah Member Siswa</span>
+              </button>
+            </div>
           </div>
+
+          {importFeedback && (
+            <div className={`p-3 rounded-xl text-xs font-semibold space-y-1 ${importFeedback.type === 'error' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+              <p>{importFeedback.summary}</p>
+              {importFeedback.details.length > 0 && (
+                <ul className="list-disc list-inside font-normal opacity-90 max-h-24 overflow-y-auto">
+                  {importFeedback.details.map((d, i) => <li key={i}>{d}</li>)}
+                </ul>
+              )}
+            </div>
+          )}
 
           {/* Students Table */}
           <div className="border border-slate-200 rounded-xl overflow-hidden">
@@ -255,7 +334,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   value={newClassName}
                   onChange={e => setNewClassName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                 />
               </div>
 
@@ -264,7 +343,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <select
                   value={newClassGrade}
                   onChange={e => setNewClassGrade(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900"
                 >
                   <option value="7">Kelas 7</option>
                   <option value="8">Kelas 8</option>
@@ -280,7 +359,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <select
                   value={newClassTeacher}
                   onChange={e => setNewClassTeacher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900"
                 >
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
@@ -328,7 +407,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   value={newStudentName}
                   onChange={e => setNewStudentName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                 />
               </div>
 
@@ -339,7 +418,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   placeholder="0098765432"
                   value={newStudentNisn}
                   onChange={e => setNewStudentNisn(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900"
                 />
               </div>
 

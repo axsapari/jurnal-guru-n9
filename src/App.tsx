@@ -14,7 +14,6 @@ import { ClassManagement } from './components/Management/ClassManagement';
 import { TpManagement } from './components/Management/TpManagement';
 import { TeacherManagement } from './components/Management/TeacherManagement';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
-import { GasExportModal } from './components/AppsScript/GasExportModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
 export default function App() {
@@ -32,7 +31,6 @@ export default function App() {
 
   // Modals
   const [showJournalModal, setShowJournalModal] = useState<boolean>(false);
-  const [showGasModal, setShowGasModal] = useState<boolean>(false);
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
 
   const refreshState = async () => {
@@ -110,7 +108,6 @@ export default function App() {
       {/* Network & Offline Status Banner */}
       <OfflineBanner
         onSyncComplete={refreshState}
-        onOpenGasModal={() => setShowGasModal(true)}
       />
 
       {/* Main Navigation Header */}
@@ -219,13 +216,6 @@ export default function App() {
         classes={classes}
         learningObjectives={learningObjectives}
         onSaved={handleJournalSaved}
-      />
-
-      {/* Google Apps Script & Google Sheets Modal */}
-      <GasExportModal
-        isOpen={showGasModal}
-        onClose={() => setShowGasModal(false)}
-        onSavedUrl={refreshState}
       />
 
       {/* School Settings & Letterhead Modal */}

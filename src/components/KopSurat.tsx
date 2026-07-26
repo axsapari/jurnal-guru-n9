@@ -11,13 +11,19 @@ export const KopSurat: React.FC<KopSuratProps> = ({ config, title, subtitle }) =
   return (
     <div className="w-full text-slate-900 mb-6 font-serif">
       <div className="flex items-center justify-between gap-4 pb-3">
-        {/* Logo Left */}
+        {/* Logo Kiri: Logo Pemerintah Kota/Kabupaten */}
         <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
-          <img 
-            src={config.logoUrl} 
-            alt="Logo Sekolah" 
-            className="w-16 h-16 object-contain rounded-md border border-slate-200" 
-          />
+          {config.cityLogoUrl ? (
+            <img
+              src={config.cityLogoUrl}
+              alt="Logo Pemerintah Kota/Kabupaten"
+              className="w-16 h-16 object-contain"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-md border border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-400 text-center p-1 font-sans">
+              Logo Kota/Kab.
+            </div>
+          )}
         </div>
 
         {/* Center Text Header */}
@@ -36,11 +42,19 @@ export const KopSurat: React.FC<KopSuratProps> = ({ config, title, subtitle }) =
           </p>
         </div>
 
-        {/* Tut Wuri / Right Badge */}
+        {/* Logo Kanan: Logo Sekolah */}
         <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs font-bold text-indigo-800 text-center p-1">
-            AKREDITASI A
-          </div>
+          {config.logoUrl ? (
+            <img
+              src={config.logoUrl}
+              alt="Logo Sekolah"
+              className="w-16 h-16 object-contain"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-md border border-dashed border-slate-300 flex items-center justify-center text-[9px] text-slate-400 text-center p-1 font-sans">
+              Logo Sekolah
+            </div>
+          )}
         </div>
       </div>
 

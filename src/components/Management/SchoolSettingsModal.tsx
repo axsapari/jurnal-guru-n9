@@ -19,6 +19,9 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
   const [formData, setFormData] = useState<SchoolConfig>({ ...schoolConfig });
   const [successToast, setSuccessToast] = useState(false);
 
+  const [uploadingLogo, setUploadingLogo] = useState<'school' | 'city' | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,11 +35,19 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
     }, 1500);
   };
 
-  const sampleLogos = [
-    { name: 'Garuda / Kementerian', url: 'https://images.unsplash.com/photo-1599584385967-826ef237c179?auto=format&fit=crop&w=200&q=80' },
-    { name: 'Tut Wuri Handayani / Pendidikan', url: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?auto=format&fit=crop&w=200&q=80' },
-    { name: 'Logo Lambang Lencana Blue', url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=200&q=80' }
-  ];
+  const handleLogoFileChange = async (kind: 'school' | 'city', file: File | null) => {
+    if (!file) return;
+    setUploadError(null);
+    setUploadingLogo(kind);
+    try {
+      const url = await StorageService.uploadLogo(file, kind);
+      setFormData(prev => kind === 'school' ? { ...prev, logoUrl: url } : { ...prev, cityLogoUrl: url });
+    } catch (err: any) {
+      setUploadError(`Gagal mengupload logo: ${err?.message || 'terjadi kesalahan'}`);
+    } finally {
+      setUploadingLogo(null);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
@@ -69,50 +80,91 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
             </div>
           )}
 
-          {/* Section 1: Logo & Preview Kop Surat */}
-          <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-3">
+          {/* Section 1: Logo Kop Surat */}
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200/80 dark:border-slate-700 space-y-4">
             <label className="block font-bold text-slate-900 dark:text-slate-100 text-xs">
-              1. Logo Sekolah (Akan Muncul pada Kop Surat)
+              1. Logo Kop Surat (Kiri: Pemerintah Kota/Kab. — Kanan: Sekolah)
             </label>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
-                {formData.logoUrl ? (
-                  <img src={formData.logoUrl} alt="Logo Sekolah" className="w-16 h-16 object-contain" />
-                ) : (
-                  <ImageIcon className="text-slate-400" size={32} />
-                )}
+
+            {uploadError && (
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-xl text-[11px] font-semibold">
+                {uploadError}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Logo Kota/Kabupaten */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
+                  {formData.cityLogoUrl ? (
+                    <img src={formData.cityLogoUrl} alt="Logo Kota/Kabupaten" className="w-16 h-16 object-contain" />
+                  ) : (
+                    <ImageIcon className="text-slate-400" size={28} />
+                  )}
+                </div>
+                <div className="flex-1 w-full space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                    Logo Pemerintah Kota/Kabupaten (kiri)
+                  </label>
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition">
+                    <Upload size={13} />
+                    {uploadingLogo === 'city' ? 'Mengupload...' : 'Upload Gambar'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => handleLogoFileChange('city', e.target.files?.[0] || null)}
+                      disabled={uploadingLogo !== null}
+                    />
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.cityLogoUrl || ''}
+                    onChange={e => setFormData({ ...formData, cityLogoUrl: e.target.value })}
+                    placeholder="atau tempel URL gambar di sini"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100"
+                  />
+                </div>
               </div>
 
-              <div className="flex-1 w-full space-y-2">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                    URL Gambar Logo (atau pilih preset logo)
+              {/* Logo Sekolah */}
+              <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-2 flex items-center justify-center flex-shrink-0 shadow-xs">
+                  {formData.logoUrl ? (
+                    <img src={formData.logoUrl} alt="Logo Sekolah" className="w-16 h-16 object-contain" />
+                  ) : (
+                    <ImageIcon className="text-slate-400" size={28} />
+                  )}
+                </div>
+                <div className="flex-1 w-full space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400">
+                    Logo Sekolah (kanan)
+                  </label>
+                  <label className="flex items-center justify-center gap-1.5 px-3 py-2 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition">
+                    <Upload size={13} />
+                    {uploadingLogo === 'school' ? 'Mengupload...' : 'Upload Gambar'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => handleLogoFileChange('school', e.target.files?.[0] || null)}
+                      disabled={uploadingLogo !== null}
+                    />
                   </label>
                   <input
                     type="url"
                     value={formData.logoUrl}
                     onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[11px]"
+                    placeholder="atau tempel URL gambar di sini"
+                    className="w-full px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-[10px] text-slate-900 dark:text-slate-100"
                   />
-                </div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 self-center font-medium mr-1">Contoh Preset:</span>
-                  {sampleLogos.map((s, idx) => (
-                    <button
-                      type="button"
-                      key={idx}
-                      onClick={() => setFormData({ ...formData, logoUrl: s.url })}
-                      className="px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 rounded-lg text-[10px] font-semibold text-slate-700 dark:text-slate-300 transition cursor-pointer"
-                    >
-                      {s.name}
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
+
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">
+              Gambar yang diupload disimpan otomatis di Supabase Storage (bucket "logos") — tidak perlu hosting gambar terpisah.
+            </p>
           </div>
 
           {/* Section 2: Identitas Sekolah */}

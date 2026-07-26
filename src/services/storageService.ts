@@ -15,13 +15,13 @@ const LOCAL_KEYS = {
 
 const schoolFromDb = (r: any): SchoolConfig => ({
   schoolName: r.school_name, npsn: r.npsn, address: r.address, phone: r.phone,
-  email: r.email, website: r.website, logoUrl: r.logo_url,
+  email: r.email, website: r.website, logoUrl: r.logo_url, cityLogoUrl: r.city_logo_url,
   headmasterName: r.headmaster_name, headmasterNip: r.headmaster_nip,
   city: r.city, province: r.province,
 });
 const schoolToDb = (c: SchoolConfig) => ({
   id: 1, school_name: c.schoolName, npsn: c.npsn, address: c.address, phone: c.phone,
-  email: c.email, website: c.website, logo_url: c.logoUrl,
+  email: c.email, website: c.website, logo_url: c.logoUrl, city_logo_url: c.cityLogoUrl ?? '',
   headmaster_name: c.headmasterName, headmaster_nip: c.headmasterNip,
   city: c.city, province: c.province,
 });
@@ -99,13 +99,27 @@ export class StorageService {
     assertOk(error, 'getSchoolConfig');
     return data ? schoolFromDb(data) : {
       schoolName: '', npsn: '', address: '', phone: '', email: '', website: '',
-      logoUrl: '', headmasterName: '', headmasterNip: '', city: '', province: '',
+      logoUrl: '', cityLogoUrl: '', headmasterName: '', headmasterNip: '', city: '', province: '',
     };
   }
 
   static async saveSchoolConfig(config: SchoolConfig): Promise<void> {
     const { error } = await supabase.from('school_config').upsert(schoolToDb(config));
     assertOk(error, 'saveSchoolConfig');
+  }
+
+  // Upload a logo image (school logo or city/government logo) to Supabase
+  // Storage and return its public URL, ready to store in SchoolConfig.
+  static async uploadLogo(file: File, kind: 'school' | 'city'): Promise<string> {
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `${kind}-logo-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(path, file, {
+      upsert: true,
+      cacheControl: '3600',
+    });
+    assertOk(error, 'uploadLogo');
+    const { data } = supabase.storage.from('logos').getPublicUrl(path);
+    return data.publicUrl;
   }
 
   // Users
@@ -253,17 +267,6 @@ export class StorageService {
 
     localStorage.setItem(LOCAL_KEYS.PENDING_JOURNALS, JSON.stringify(stillPending));
     return { syncedCount, errors };
-  }
-
-  // Optional: Google Apps Script webhook URL (kept as a shared app setting)
-  static async getGasWebAppUrl(): Promise<string> {
-    const { data } = await supabase.from('app_settings').select('value').eq('key', 'gas_webapp_url').maybeSingle();
-    return data?.value || '';
-  }
-
-  static async setGasWebAppUrl(url: string): Promise<void> {
-    const { error } = await supabase.from('app_settings').upsert({ key: 'gas_webapp_url', value: url });
-    assertOk(error, 'setGasWebAppUrl');
   }
 
   // Reminders

@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* Make `dark:` utilities respond to the .dark class on <html> (toggled by
+   the app's own light/dark switch) instead of the OS prefers-color-scheme.
+   Without this, Tailwind v4 defaults to media-query dark mode, so the
+   in-app toggle appeared to do nothing. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind's default placeholder color (slate-400 @ full opacity) is too
+   light against white form fields (contrast ~2.5:1). Darken it app-wide
+   for readability, with a lighter shade for dark-mode surfaces. */
+::placeholder {
+  color: #64748b; /* slate-500 */
+  opacity: 1;
+}
+
+.dark ::placeholder {
+  color: #94a3b8; /* slate-400, lighter for dark backgrounds */
+  opacity: 1;
+}

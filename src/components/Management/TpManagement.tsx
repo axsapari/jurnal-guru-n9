@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Target, Plus, Trash2, Search, BookOpen } from 'lucide-react';
+import { Target, Plus, Trash2, Search, BookOpen, FileDown, UploadCloud } from 'lucide-react';
 import { LearningObjective } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { ImportUtils } from '../../utils/importUtils';
 
 interface TpManagementProps {
   learningObjectives: LearningObjective[];
@@ -21,6 +22,8 @@ export const TpManagement: React.FC<TpManagementProps> = ({
   const [grade, setGrade] = useState('7');
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
+  const [isImportingTp, setIsImportingTp] = useState(false);
+  const [tpImportFeedback, setTpImportFeedback] = useState<{ type: 'success' | 'error'; summary: string; details: string[] } | null>(null);
 
   const subjects = Array.from(new Set(learningObjectives.map(tp => tp.subject)));
 
@@ -59,6 +62,42 @@ export const TpManagement: React.FC<TpManagementProps> = ({
     }
   };
 
+  const handleImportTp = async (file: File | null) => {
+    if (!file) return;
+    setIsImportingTp(true);
+    setTpImportFeedback(null);
+
+    try {
+      const { rows, errors } = await ImportUtils.parseLearningObjectives(file);
+
+      if (rows.length === 0) {
+        setTpImportFeedback({ type: 'error', summary: 'Tidak ada data TP valid yang bisa diimpor dari file ini.', details: errors });
+        return;
+      }
+
+      const newTps: LearningObjective[] = rows.map((r, i) => ({
+        id: 'tp-' + Date.now() + '-' + i,
+        subject: r.subject,
+        grade: r.grade,
+        code: r.code || `TP.${r.subject.slice(0, 3).toUpperCase()}.${r.grade}.${learningObjectives.length + i + 1}`,
+        description: r.description,
+      }));
+
+      await StorageService.saveLearningObjectives([...learningObjectives, ...newTps]);
+
+      setTpImportFeedback({
+        type: 'success',
+        summary: `Berhasil mengimpor ${newTps.length} Tujuan Pembelajaran.`,
+        details: errors,
+      });
+      onRefresh();
+    } catch (err: any) {
+      setTpImportFeedback({ type: 'error', summary: `Gagal membaca file: ${err?.message || 'format file tidak dikenali'}`, details: [] });
+    } finally {
+      setIsImportingTp(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
@@ -72,14 +111,48 @@ export const TpManagement: React.FC<TpManagementProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-        >
-          <Plus size={16} />
-          <span>+ Tambah TP Baru</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => ImportUtils.downloadTpTemplate()}
+            className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5"
+            title="Download template Excel untuk diisi lalu diimpor"
+          >
+            <FileDown size={15} />
+            <span>Template</span>
+          </button>
+
+          <label className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+            <UploadCloud size={15} />
+            <span>{isImportingTp ? 'Mengimpor...' : 'Impor TP'}</span>
+            <input
+              type="file"
+              accept=".xlsx,.xls,.csv"
+              className="hidden"
+              disabled={isImportingTp}
+              onChange={e => handleImportTp(e.target.files?.[0] || null)}
+            />
+          </label>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+          >
+            <Plus size={16} />
+            <span>+ Tambah TP Baru</span>
+          </button>
+        </div>
       </div>
+
+      {tpImportFeedback && (
+        <div className={`p-3 rounded-xl text-xs font-semibold space-y-1 ${tpImportFeedback.type === 'error' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
+          <p>{tpImportFeedback.summary}</p>
+          {tpImportFeedback.details.length > 0 && (
+            <ul className="list-disc list-inside font-normal opacity-90 max-h-24 overflow-y-auto">
+              {tpImportFeedback.details.map((d, i) => <li key={i}>{d}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* Filter Bar */}
       <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -162,7 +235,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                   />
                 </div>
 
@@ -171,7 +244,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                   <select
                     value={grade}
                     onChange={e => setGrade(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                   >
                     <option value="7">Kelas 7</option>
                     <option value="8">Kelas 8</option>
@@ -187,7 +260,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                   placeholder="misal: TP.MAT.7.1"
                   value={code}
                   onChange={e => setCode(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900"
                 />
               </div>
 
@@ -199,7 +272,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl text-xs text-slate-900"
                 ></textarea>
               </div>
 

@@ -13,6 +13,7 @@ create table if not exists school_config (
   email text default '',
   website text default '',
   logo_url text default '',
+  city_logo_url text default '',
   headmaster_name text default '',
   headmaster_nip text default '',
   city text default '',
@@ -128,6 +129,24 @@ create policy "public read/write learning_objectives" on learning_objectives for
 create policy "public read/write journal_entries" on journal_entries for all using (true) with check (true);
 create policy "public read/write reminders" on reminders for all using (true) with check (true);
 create policy "public read/write app_settings" on app_settings for all using (true) with check (true);
+
+-- ============================================================
+-- Storage bucket untuk logo sekolah & logo pemerintah kota/kabupaten
+-- (dipakai di kop surat). Publik dibaca (agar tampil di aplikasi),
+-- publik ditulis (karena aplikasi ini belum punya login sungguhan).
+-- ============================================================
+insert into storage.buckets (id, name, public)
+values ('logos', 'logos', true)
+on conflict (id) do nothing;
+
+create policy "public read logos" on storage.objects
+  for select using (bucket_id = 'logos');
+
+create policy "public upload logos" on storage.objects
+  for insert with check (bucket_id = 'logos');
+
+create policy "public update logos" on storage.objects
+  for update using (bucket_id = 'logos');
 
 -- ============================================================
 -- Seed data awal (opsional - boleh dihapus/diedit sesuai sekolahmu)

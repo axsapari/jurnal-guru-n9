@@ -1,18 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, Database } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 
 interface OfflineBannerProps {
   onSyncComplete?: () => void;
-  onOpenGasModal?: () => void;
 }
 
-export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, onOpenGasModal }) => {
+export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) => {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
-  const [gasUrl, setGasUrl] = useState<string>('');
 
   const updateStatus = () => {
     setIsOnline(navigator.onLine);
@@ -21,7 +19,6 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
 
   useEffect(() => {
     updateStatus();
-    StorageService.getGasWebAppUrl().then(setGasUrl);
 
     const handleOnline = () => {
       setIsOnline(true);
@@ -112,15 +109,6 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, on
               {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
             </button>
           )}
-
-          <button
-            onClick={onOpenGasModal}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer"
-            title="Pengaturan Google Sheets & Google Apps Script"
-          >
-            <Database size={13} className="text-amber-400" />
-            <span>{gasUrl ? 'Google Sheets Terhubung' : 'Integrasi Google Sheets / GAS'}</span>
-          </button>
         </div>
       </div>
     </div>

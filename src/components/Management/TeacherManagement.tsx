@@ -124,7 +124,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                   value={name}
                   onChange={e => setName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                 />
               </div>
 
@@ -135,7 +135,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                   placeholder="19850412 200902 2 008"
                   value={nip}
                   onChange={e => setNip(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900"
                 />
               </div>
 
@@ -146,7 +146,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                     type="text"
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl text-slate-900"
                   />
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                   <select
                     value={role}
                     onChange={e => setRole(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900"
                   >
                     <option value="teacher">Guru</option>
                     <option value="admin">Admin / Kepala Sekolah</option>
@@ -169,7 +169,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, onR
                   placeholder="081234567890"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-mono text-slate-900"
                 />
               </div>
 
