@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { GraduationCap, Save, Plus, Trash2, Scale, ListChecks, FileDown, AlertTriangle } from 'lucide-react';
 import { User, ClassRoom, Student, LearningObjective, GradeType, Grade } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
 import * as XLSX from 'xlsx';
 
 interface GradesManagementProps {
@@ -40,6 +41,8 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
   const [tpId, setTpId] = useState('');
   const [scoreInputs, setScoreInputs] = useState<Record<string, string>>({});
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [isSavingGrades, setIsSavingGrades] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Bobot Penilaian state
   const [newTypeName, setNewTypeName] = useState('');
@@ -81,6 +84,7 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
   }, [grades, gradeTypeId]);
 
   const handleSaveGrades = async () => {
+    if (isSavingGrades) return; // cegah klik dobel
     if (!gradeTypeId || !assessmentName.trim()) {
       setFeedback({ type: 'error', message: 'Pilih jenis penilaian dan isi nama penilaian dulu.' });
       return;
@@ -111,10 +115,16 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
       setFeedback({ type: 'error', message: 'Belum ada nilai yang diisi.' });
       return;
     }
-    await StorageService.saveGrades(rows);
-    setFeedback({ type: 'success', message: `${rows.length} nilai berhasil disimpan.` });
-    loadClassData();
-    setTimeout(() => setFeedback(null), 3000);
+    setIsSavingGrades(true);
+    try {
+      await StorageService.saveGrades(rows);
+      setFeedback({ type: 'success', message: `${rows.length} nilai berhasil disimpan.` });
+      loadClassData();
+      setShowSuccess(true);
+      setTimeout(() => setFeedback(null), 3000);
+    } finally {
+      setIsSavingGrades(false);
+    }
   };
 
   const handleAddGradeType = async () => {
@@ -331,9 +341,10 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
                   <div className="flex justify-end pt-2">
                     <button
                       onClick={handleSaveGrades}
-                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2"
+                      disabled={isSavingGrades}
+                      className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2"
                     >
-                      <Save size={15} /> Simpan Nilai
+                      {isSavingGrades ? <SavingSpinner /> : <><Save size={15} /> Simpan Nilai</>}
                     </button>
                   </div>
                 </>
@@ -449,6 +460,12 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
           )}
         </>
       )}
+
+      <SuccessPopup
+        isOpen={showSuccess}
+        message="Nilai siswa berhasil disimpan."
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 };

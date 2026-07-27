@@ -9,6 +9,7 @@ import {
 } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { SUBJECTS } from '../../data/subjects';
+import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
 
 interface JournalFormModalProps {
   isOpen: boolean;
@@ -48,6 +49,8 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   const [tpSearchQuery, setTpSearchQuery] = useState('');
   const [summary, setSummary] = useState('');
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   useEffect(() => {
     StorageService.getSchedule().then(setSchedule);
@@ -180,10 +183,14 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (isSubmitting) return; // cegah klik dobel yang bikin jurnal dobel
     if (!selectedClassId || !summary.trim()) {
       alert('Mohon isi kelas dan ringkasan kegiatan pembelajaran.');
       return;
     }
+
+    setIsSubmitting(true);
+    try {
 
     // Attendance summary count
     let hadir = 0, sakit = 0, izin = 0, alpa = 0;
@@ -227,7 +234,10 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
     const saved = await StorageService.saveJournalEntry(newJournal);
     onSaved(saved.entry);
-    onClose();
+    setShowSuccess(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -676,15 +686,24 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
               <button
                 type="submit"
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
+                disabled={isSubmitting}
+                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 disabled:opacity-60 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
               >
-                <Check size={16} />
-                <span>Simpan Jurnal & Absensi</span>
+                {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>Simpan Jurnal & Absensi</span></>}
               </button>
             </div>
           </div>
         </form>
       </div>
+
+      <SuccessPopup
+        isOpen={showSuccess}
+        message="Jurnal harian & absensi berhasil disimpan."
+        onClose={() => {
+          setShowSuccess(false);
+          onClose();
+        }}
+      />
     </div>
   );
 };

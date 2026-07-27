@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sparkles, Save, Minus, Plus, RotateCcw, Download } from 'lucide-react';
+import { Sparkles, Save, RotateCcw, Download } from 'lucide-react';
 import { User, ClassRoom, Student, Participation } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
 import * as XLSX from 'xlsx';
 
 interface ParticipationManagementProps {
@@ -11,6 +12,7 @@ interface ParticipationManagementProps {
 
 const DEFAULT_SEMESTER = 'Ganjil';
 const DEFAULT_ACADEMIC_YEAR = '2025/2026';
+const SCORE_OPTIONS = [30, 50, 80, 100];
 
 export const ParticipationManagement: React.FC<ParticipationManagementProps> = ({ currentUser, classes }) => {
   const scopedClasses = (currentUser.role === 'admin' || !currentUser.classIds || currentUser.classIds.length === 0)
@@ -23,6 +25,8 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
   const [scores, setScores] = useState<Record<string, number>>({});
   const [allParticipations, setAllParticipations] = useState<Participation[]>([]);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const [tab, setTab] = useState<'input' | 'rekap'>('input');
 
   useEffect(() => {
@@ -42,10 +46,6 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
     setScores(initial);
   }, [students, date, allParticipations, classId]);
 
-  const adjustScore = (studentId: string, delta: number) => {
-    setScores(prev => ({ ...prev, [studentId]: Math.max(0, Math.min(100, (prev[studentId] || 0) + delta)) }));
-  };
-
   const resetAll = () => {
     const reset: Record<string, number> = {};
     students.forEach(s => { reset[s.id] = 30; });
@@ -53,23 +53,30 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
   };
 
   const handleSave = async () => {
-    const rows: Participation[] = students.map(s => {
-      const existing = allParticipations.find(p => p.studentId === s.id && p.classId === classId && p.date === date);
-      return {
-        id: existing?.id || 'part-' + Date.now() + '-' + s.id,
-        studentId: s.id,
-        classId,
-        date,
-        score: scores[s.id] ?? 30,
-        teacherId: currentUser.id,
-        semester: DEFAULT_SEMESTER,
-        academicYear: DEFAULT_ACADEMIC_YEAR,
-      };
-    });
-    await StorageService.saveParticipations(rows);
-    setFeedback(`Keaktifan ${rows.length} siswa untuk tanggal ${date} berhasil disimpan.`);
-    setAllParticipations(await StorageService.getParticipations());
-    setTimeout(() => setFeedback(null), 3000);
+    if (isSaving) return; // cegah klik dobel
+    setIsSaving(true);
+    try {
+      const rows: Participation[] = students.map(s => {
+        const existing = allParticipations.find(p => p.studentId === s.id && p.classId === classId && p.date === date);
+        return {
+          id: existing?.id || 'part-' + Date.now() + '-' + s.id,
+          studentId: s.id,
+          classId,
+          date,
+          score: scores[s.id] ?? 30,
+          teacherId: currentUser.id,
+          semester: DEFAULT_SEMESTER,
+          academicYear: DEFAULT_ACADEMIC_YEAR,
+        };
+      });
+      await StorageService.saveParticipations(rows);
+      setFeedback(`Keaktifan ${rows.length} siswa untuk tanggal ${date} berhasil disimpan.`);
+      setAllParticipations(await StorageService.getParticipations());
+      setShowSuccess(true);
+      setTimeout(() => setFeedback(null), 3000);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Rekap rata-rata keaktifan per siswa di kelas ini
@@ -142,14 +149,20 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
             {students.map(s => (
               <div key={s.id} className="flex items-center justify-between gap-3 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                 <span className="text-xs text-slate-700 dark:text-slate-300 flex-1 truncate">{s.name}</span>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => adjustScore(s.id, -5)} className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer">
-                    <Minus size={12} />
-                  </button>
-                  <span className="w-10 text-center text-sm font-bold text-slate-900 dark:text-white">{scores[s.id] ?? 30}</span>
-                  <button onClick={() => adjustScore(s.id, 5)} className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer">
-                    <Plus size={12} />
-                  </button>
+                <div className="flex items-center gap-1.5">
+                  {SCORE_OPTIONS.map(opt => (
+                    <button
+                      key={opt}
+                      onClick={() => setScores(prev => ({ ...prev, [s.id]: opt }))}
+                      className={`w-10 h-8 rounded-lg text-xs font-bold transition cursor-pointer border ${
+                        scores[s.id] === opt
+                          ? 'bg-indigo-600 border-indigo-600 text-white'
+                          : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-400'
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
                 </div>
               </div>
             ))}
@@ -157,8 +170,8 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
           </div>
           {students.length > 0 && (
             <div className="flex justify-end pt-2">
-              <button onClick={handleSave} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2">
-                <Save size={15} /> Simpan Keaktifan
+              <button onClick={handleSave} disabled={isSaving} className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2">
+                {isSaving ? <SavingSpinner /> : <><Save size={15} /> Simpan Keaktifan</>}
               </button>
             </div>
           )}
@@ -194,6 +207,12 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
           </table>
         </div>
       )}
+
+      <SuccessPopup
+        isOpen={showSuccess}
+        message={`Keaktifan untuk tanggal ${date} berhasil disimpan.`}
+        onClose={() => setShowSuccess(false)}
+      />
     </div>
   );
 };
