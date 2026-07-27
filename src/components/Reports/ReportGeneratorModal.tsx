@@ -7,6 +7,7 @@ import { AttendanceReportTab } from './AttendanceReportTab';
 import { GradeReportTab } from './GradeReportTab';
 
 interface ReportGeneratorModalProps {
+  currentUser: User;
   journals: JournalEntry[];
   schoolConfig: SchoolConfig;
   classes: ClassRoom[];
@@ -16,6 +17,7 @@ interface ReportGeneratorModalProps {
 type ReportTab = 'journal' | 'attendance' | 'grades';
 
 export const ReportGeneratorModal: React.FC<ReportGeneratorModalProps> = ({
+  currentUser,
   journals,
   schoolConfig,
   classes,
@@ -57,13 +59,13 @@ export const ReportGeneratorModal: React.FC<ReportGeneratorModalProps> = ({
       </div>
 
       {tab === 'journal' && (
-        <JournalReportTab journals={journals} schoolConfig={schoolConfig} classes={classes} teachers={teachers} />
+        <JournalReportTab currentUser={currentUser} journals={journals} schoolConfig={schoolConfig} classes={classes} teachers={teachers} />
       )}
       {tab === 'attendance' && (
-        <AttendanceReportTab journals={journals} schoolConfig={schoolConfig} classes={classes} students={students} />
+        <AttendanceReportTab currentUser={currentUser} journals={journals} schoolConfig={schoolConfig} classes={classes} students={students} />
       )}
       {tab === 'grades' && (
-        <GradeReportTab schoolConfig={schoolConfig} classes={classes} />
+        <GradeReportTab currentUser={currentUser} schoolConfig={schoolConfig} classes={classes} />
       )}
     </div>
   );

@@ -207,6 +207,7 @@ export default function App() {
         {/* TAB 4: Laporan */}
         {activeTab === 'reports' && (
           <ReportGeneratorModal
+            currentUser={currentUser}
             journals={journals}
             schoolConfig={schoolConfig!}
             classes={classes}
@@ -227,6 +228,7 @@ export default function App() {
         {/* TAB 6: Tujuan Pembelajaran (TP) */}
         {activeTab === 'tp' && (
           <TpManagement
+            currentUser={currentUser}
             learningObjectives={learningObjectives}
             onRefresh={refreshState}
           />

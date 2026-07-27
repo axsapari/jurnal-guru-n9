@@ -1,33 +1,47 @@
 import React, { useState } from 'react';
 import { Target, Plus, Trash2, Search, BookOpen, FileDown, UploadCloud } from 'lucide-react';
-import { LearningObjective } from '../../types';
+import { LearningObjective, User } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ImportUtils } from '../../utils/importUtils';
+import { SUBJECTS } from '../../data/subjects';
 
 interface TpManagementProps {
+  currentUser: User;
   learningObjectives: LearningObjective[];
   onRefresh: () => void;
 }
 
 export const TpManagement: React.FC<TpManagementProps> = ({
+  currentUser,
   learningObjectives,
   onRefresh
 }) => {
+  const isAdmin = currentUser.role === 'admin';
+  // Guru hanya mengelola TP untuk mapel yang diampunya sendiri.
+  const teacherSubjects = currentUser.subjects && currentUser.subjects.length > 0
+    ? currentUser.subjects
+    : (currentUser.subject ? [currentUser.subject] : SUBJECTS);
+  const subjectOptions = isAdmin ? SUBJECTS : teacherSubjects;
+
+  const scopedLearningObjectives = isAdmin
+    ? learningObjectives
+    : learningObjectives.filter(tp => teacherSubjects.includes(tp.subject));
+
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('ALL');
   
   // New TP Modal
   const [showAddModal, setShowAddModal] = useState(false);
-  const [subject, setSubject] = useState('Matematika');
+  const [subject, setSubject] = useState(subjectOptions[0] || 'Matematika');
   const [grade, setGrade] = useState('7');
   const [code, setCode] = useState('');
   const [description, setDescription] = useState('');
   const [isImportingTp, setIsImportingTp] = useState(false);
   const [tpImportFeedback, setTpImportFeedback] = useState<{ type: 'success' | 'error'; summary: string; details: string[] } | null>(null);
 
-  const subjects = Array.from(new Set(learningObjectives.map(tp => tp.subject)));
+  const subjects = Array.from(new Set(scopedLearningObjectives.map(tp => tp.subject)));
 
-  const filteredTps = learningObjectives.filter(tp => {
+  const filteredTps = scopedLearningObjectives.filter(tp => {
     const matchesSearch = tp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           tp.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = subjectFilter === 'ALL' || tp.subject === subjectFilter;
@@ -230,13 +244,14 @@ export const TpManagement: React.FC<TpManagementProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Mata Pelajaran</label>
-                  <input
-                    type="text"
+                  <select
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
                     required
                     className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
-                  />
+                  >
+                    {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
                 </div>
 
                 <div>

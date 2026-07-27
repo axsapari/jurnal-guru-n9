@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserCheck, Plus, Trash2, Edit, Phone, Mail, X, KeyRound, Check } from 'lucide-react';
+import { UserCheck, Plus, Trash2, Edit, Phone, Mail, X, KeyRound, Check, Upload } from 'lucide-react';
 import { User, ClassRoom } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { SUBJECTS } from '../../data/subjects';
@@ -10,6 +10,8 @@ interface TeacherManagementProps {
   onRefresh: () => void;
 }
 
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150';
+
 const emptyForm = {
   id: '' as string | null,
   name: '',
@@ -19,12 +21,15 @@ const emptyForm = {
   subjects: [] as string[],
   classIds: [] as string[],
   role: 'teacher' as 'admin' | 'teacher',
+  avatar: '' as string,
 };
 
 export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, classes, onRefresh }) => {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [resetFeedback, setResetFeedback] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const openAddModal = () => {
     setForm(emptyForm);
@@ -41,8 +46,23 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, cla
       subjects: u.subjects && u.subjects.length > 0 ? u.subjects : (u.subject ? [u.subject] : []),
       classIds: u.classIds || [],
       role: u.role,
+      avatar: u.avatar || '',
     });
     setShowModal(true);
+  };
+
+  const handleAvatarUpload = async (file: File | null) => {
+    if (!file) return;
+    setAvatarError(null);
+    setIsUploadingAvatar(true);
+    try {
+      const url = await StorageService.uploadAvatar(file);
+      setForm(prev => ({ ...prev, avatar: url }));
+    } catch (err: any) {
+      setAvatarError(`Gagal upload foto: ${err?.message || 'terjadi kesalahan'}`);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   const toggleSubject = (subj: string) => {
@@ -77,6 +97,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, cla
         subjects: form.subjects,
         subject: form.subjects[0] || '',
         classIds: form.classIds,
+        avatar: form.avatar || u.avatar || DEFAULT_AVATAR,
       } : u);
       await StorageService.saveUsers(updated);
     } else {
@@ -91,7 +112,7 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, cla
         subjects: form.subjects,
         subject: form.subjects[0] || '',
         classIds: form.classIds,
-        avatar: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150`,
+        avatar: form.avatar || DEFAULT_AVATAR,
         passwordHash: 'CHANGE_ON_FIRST_LOGIN',
         mustChangePassword: true,
       };
@@ -217,6 +238,27 @@ export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, cla
             </h3>
 
             <form onSubmit={handleSubmit} className="space-y-3 text-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                  <img src={form.avatar || DEFAULT_AVATAR} alt="Foto profil" className="w-full h-full object-cover" />
+                </div>
+                <div className="flex-1 space-y-1">
+                  <label className="block font-bold text-slate-700 dark:text-slate-300">Foto Profil</label>
+                  {avatarError && <p className="text-rose-600 dark:text-rose-400 text-[10px]">{avatarError}</p>}
+                  <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-lg text-[11px] font-semibold text-slate-600 dark:text-slate-300 cursor-pointer hover:border-indigo-400 transition">
+                    <Upload size={12} />
+                    {isUploadingAvatar ? 'Mengupload...' : 'Upload Foto'}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={isUploadingAvatar}
+                      onChange={e => handleAvatarUpload(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </div>
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">Nama Lengkap & Gelar</label>
                 <input

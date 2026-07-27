@@ -67,7 +67,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) 
   };
 
   return (
-    <div className="w-full bg-slate-900 text-white border-b border-slate-800 text-xs py-2 px-4 shadow-sm">
+    <div className="w-full bg-slate-900 text-white border-b border-slate-800 text-xs py-2 px-4 shadow-sm print:hidden">
       <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
         {/* Connection status badge */}
         <div className="flex items-center gap-2">

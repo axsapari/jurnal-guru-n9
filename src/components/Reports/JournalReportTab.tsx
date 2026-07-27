@@ -8,6 +8,7 @@ import { KopSurat } from '../KopSurat';
 import { ExportUtils } from '../../utils/exportUtils';
 
 interface JournalReportTabProps {
+  currentUser: User;
   journals: JournalEntry[];
   schoolConfig: SchoolConfig;
   classes: ClassRoom[];
@@ -15,18 +16,27 @@ interface JournalReportTabProps {
 }
 
 export const JournalReportTab: React.FC<JournalReportTabProps> = ({
+  currentUser,
   journals,
   schoolConfig,
   classes,
   teachers
 }) => {
+  const isAdmin = currentUser.role === 'admin';
+
+  // Guru hanya bisa lihat kelas yang diampu & jurnal miliknya sendiri.
+  const scopedClasses = (isAdmin || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
+  const scopedJournalsBase = isAdmin ? journals : journals.filter(j => j.teacherId === currentUser.id);
+
   const [filterClass, setFilterClass] = useState('ALL');
   const [filterTeacher, setFilterTeacher] = useState('ALL');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
   // Filter journals
-  const reportJournals = journals.filter(j => {
+  const reportJournals = scopedJournalsBase.filter(j => {
     const matchesClass = filterClass === 'ALL' || j.classId === filterClass;
     const matchesTeacher = filterTeacher === 'ALL' || j.teacherId === filterTeacher;
     const matchesStart = !startDate || j.date >= startDate;
@@ -86,25 +96,27 @@ export const JournalReportTab: React.FC<JournalReportTabProps> = ({
               className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100"
             >
               <option value="ALL">Semua Kelas</option>
-              {classes.map(c => (
+              {scopedClasses.map(c => (
                 <option key={c.id} value={c.id}>Kelas {c.name}</option>
               ))}
             </select>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Guru</label>
-            <select
-              value={filterTeacher}
-              onChange={e => setFilterTeacher(e.target.value)}
-              className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100"
-            >
-              <option value="ALL">Semua Guru</option>
-              {teachers.map(t => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </div>
+          {isAdmin && (
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Guru</label>
+              <select
+                value={filterTeacher}
+                onChange={e => setFilterTeacher(e.target.value)}
+                className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100"
+              >
+                <option value="ALL">Semua Guru</option>
+                {teachers.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           <div>
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Dari Tanggal</label>
@@ -233,10 +245,10 @@ export const JournalReportTab: React.FC<JournalReportTabProps> = ({
 
           <div className="text-center w-60">
             <p className="text-slate-600">{schoolConfig.city}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-            <p className="font-bold text-slate-900">Petugas / Pembuat Laporan</p>
+            <p className="font-bold text-slate-900">Guru Mata Pelajaran / Pembuat Laporan</p>
             <div className="h-16"></div>
-            <p className="font-bold underline text-slate-900">{schoolConfig.headmasterName}</p>
-            <p className="text-[11px] text-slate-600">NIP. {schoolConfig.headmasterNip}</p>
+            <p className="font-bold underline text-slate-900">{currentUser.name}</p>
+            <p className="text-[11px] text-slate-600">NIP. {currentUser.nip}</p>
           </div>
         </div>
       </div>

@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GraduationCap, Download, Printer } from 'lucide-react';
-import { SchoolConfig, ClassRoom, Student, GradeType, Grade } from '../../types';
+import { SchoolConfig, ClassRoom, Student, GradeType, Grade, User } from '../../types';
 import { KopSurat } from '../KopSurat';
 import { StorageService } from '../../services/storageService';
 import * as XLSX from 'xlsx';
 
 interface GradeReportTabProps {
+  currentUser: User;
   schoolConfig: SchoolConfig;
   classes: ClassRoom[];
 }
 
-export const GradeReportTab: React.FC<GradeReportTabProps> = ({ schoolConfig, classes }) => {
-  const [classId, setClassId] = useState(classes[0]?.id || '');
+export const GradeReportTab: React.FC<GradeReportTabProps> = ({ currentUser, schoolConfig, classes }) => {
+  const isAdmin = currentUser.role === 'admin';
+  const scopedClasses = (isAdmin || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
+
+  const [classId, setClassId] = useState(scopedClasses[0]?.id || '');
   const [subject, setSubject] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
   const [gradeTypes, setGradeTypes] = useState<GradeType[]>([]);
@@ -28,7 +34,8 @@ export const GradeReportTab: React.FC<GradeReportTabProps> = ({ schoolConfig, cl
       StorageService.getGrades(),
     ]).then(([studentList, allTypes, allGrades]) => {
       setStudents(studentList);
-      const typesForClass = allTypes.filter(t => t.classId === classId);
+      let typesForClass = allTypes.filter(t => t.classId === classId);
+      if (!isAdmin) typesForClass = typesForClass.filter(t => t.teacherId === currentUser.id);
       const subjectList = [...new Set(typesForClass.map(t => t.subject))];
       setSubjects(subjectList);
       const activeSubject = subjectList.includes(subject) ? subject : (subjectList[0] || '');
@@ -43,12 +50,14 @@ export const GradeReportTab: React.FC<GradeReportTabProps> = ({ schoolConfig, cl
   useEffect(() => {
     if (!subject) return;
     StorageService.getGradeTypes().then(allTypes => {
-      setGradeTypes(allTypes.filter(t => t.classId === classId && t.subject === subject));
+      let filtered = allTypes.filter(t => t.classId === classId && t.subject === subject);
+      if (!isAdmin) filtered = filtered.filter(t => t.teacherId === currentUser.id);
+      setGradeTypes(filtered);
     });
     StorageService.getGrades().then(allGrades => {
       setGrades(allGrades.filter(g => g.classId === classId && g.subject === subject));
     });
-  }, [subject, classId]);
+  }, [subject, classId, isAdmin, currentUser.id]);
 
   const finalGrades = useMemo(() => {
     return students.map(s => {
@@ -106,7 +115,7 @@ export const GradeReportTab: React.FC<GradeReportTabProps> = ({ schoolConfig, cl
           <div>
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Kelas</label>
             <select value={classId} onChange={e => setClassId(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100">
-              {classes.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
+              {scopedClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
             </select>
           </div>
           <div>
@@ -168,8 +177,8 @@ export const GradeReportTab: React.FC<GradeReportTabProps> = ({ schoolConfig, cl
             <p className="text-slate-600">{schoolConfig.city}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p className="font-bold text-slate-900">Guru Mata Pelajaran</p>
             <div className="h-16"></div>
-            <p className="font-bold underline text-slate-900">&nbsp;</p>
-            <p className="text-[11px] text-slate-600">NIP. -</p>
+            <p className="font-bold underline text-slate-900">{currentUser.name}</p>
+            <p className="text-[11px] text-slate-600">NIP. {currentUser.nip}</p>
           </div>
         </div>
       </div>

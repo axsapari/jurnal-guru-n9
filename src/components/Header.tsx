@@ -66,7 +66,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors duration-200">
+    <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs transition-colors duration-200 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 md:mr-20 md:max-w-none">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
@@ -96,15 +96,17 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Right Action Tools: School Settings, Dark Mode Toggle & User Profile */}
           <div className="flex items-center gap-2">
             
-            {/* Button: Pengaturan Sekolah & Kop Surat */}
-            <button
-              onClick={onOpenSchoolSettings}
-              title="Ubah Detail Sekolah, Logo & Kop Surat"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer text-xs font-semibold dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
-            >
-              <Building2 size={15} className="text-indigo-600 dark:text-indigo-400" />
-              <span className="hidden lg:inline">Identitas Sekolah</span>
-            </button>
+            {/* Button: Pengaturan Sekolah & Kop Surat (Admin saja) */}
+            {isAdmin && (
+              <button
+                onClick={onOpenSchoolSettings}
+                title="Ubah Detail Sekolah, Logo & Kop Surat"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition cursor-pointer text-xs font-semibold dark:bg-slate-800/60 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <Building2 size={15} className="text-indigo-600 dark:text-indigo-400" />
+                <span className="hidden lg:inline">Identitas Sekolah</span>
+              </button>
+            )}
 
             {/* Dark Mode Toggle Button */}
             <button
@@ -194,18 +196,20 @@ export const Header: React.FC<HeaderProps> = ({
                     </div>
                   )}
 
-                  {/* Option to Edit School Info directly from user menu */}
+                  {/* Option to Edit School Info directly from user menu (Admin saja) */}
                   <div className="border-t border-slate-100 dark:border-slate-800 pt-1 px-3 space-y-0.5">
-                    <button
-                      onClick={() => {
-                        setShowUserDropdown(false);
-                        onOpenSchoolSettings();
-                      }}
-                      className="w-full flex items-center gap-2 p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl text-xs font-bold transition cursor-pointer"
-                    >
-                      <Building2 size={15} />
-                      <span>Edit Kop & Identitas Sekolah</span>
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          onOpenSchoolSettings();
+                        }}
+                        className="w-full flex items-center gap-2 p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        <Building2 size={15} />
+                        <span>Edit Kop & Identitas Sekolah</span>
+                      </button>
+                    )}
                     {isAdmin && onOpenBackupModal && (
                       <button
                         onClick={() => {

@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import { Users, Download, Printer } from 'lucide-react';
-import { JournalEntry, SchoolConfig, ClassRoom, Student, AttendanceStatus } from '../../types';
+import { JournalEntry, SchoolConfig, ClassRoom, Student, AttendanceStatus, User } from '../../types';
 import { KopSurat } from '../KopSurat';
 import * as XLSX from 'xlsx';
 
 interface AttendanceReportTabProps {
+  currentUser: User;
   journals: JournalEntry[];
   schoolConfig: SchoolConfig;
   classes: ClassRoom[];
@@ -13,17 +14,24 @@ interface AttendanceReportTabProps {
 
 const STATUS_LETTER: Record<AttendanceStatus, string> = { hadir: 'H', sakit: 'S', izin: 'I', alpa: 'A' };
 
-export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ journals, schoolConfig, classes, students }) => {
-  const [classId, setClassId] = useState(classes[0]?.id || '');
+export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ currentUser, journals, schoolConfig, classes, students }) => {
+  const isAdmin = currentUser.role === 'admin';
+  const scopedClasses = (isAdmin || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
+
+  const [classId, setClassId] = useState(scopedClasses[0]?.id || '');
   const [subject, setSubject] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Mapel yang tersedia untuk kelas ini (dari jurnal yang sudah pernah diisi)
+  // Mapel yang tersedia untuk kelas ini (dari jurnal yang sudah pernah diisi) —
+  // guru hanya lihat mapel yang pernah ia isi sendiri di kelas ini.
   const subjectsInClass = useMemo(() => {
-    const list = [...new Set(journals.filter(j => j.classId === classId).map(j => j.subject))];
+    const relevant = journals.filter(j => j.classId === classId && (isAdmin || j.teacherId === currentUser.id));
+    const list = [...new Set(relevant.map(j => j.subject))];
     return list.sort();
-  }, [journals, classId]);
+  }, [journals, classId, isAdmin, currentUser.id]);
 
   const activeSubject = subjectsInClass.includes(subject) ? subject : (subjectsInClass[0] || '');
 
@@ -32,9 +40,10 @@ export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ journa
   const meetings = useMemo(() => {
     return journals
       .filter(j => j.classId === classId && j.subject === activeSubject)
+      .filter(j => isAdmin || j.teacherId === currentUser.id)
       .filter(j => (!startDate || j.date >= startDate) && (!endDate || j.date <= endDate))
       .sort((a, b) => a.date === b.date ? a.timeSlot.localeCompare(b.timeSlot) : a.date.localeCompare(b.date));
-  }, [journals, classId, activeSubject, startDate, endDate]);
+  }, [journals, classId, activeSubject, startDate, endDate, isAdmin, currentUser.id]);
 
   const classStudents = useMemo(() => students.filter(s => s.classId === classId), [students, classId]);
 
@@ -94,7 +103,7 @@ export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ journa
           <div>
             <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">Kelas</label>
             <select value={classId} onChange={e => setClassId(e.target.value)} className="w-full px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100">
-              {classes.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
+              {scopedClasses.map(c => <option key={c.id} value={c.id}>Kelas {c.name}</option>)}
             </select>
           </div>
           <div>
@@ -176,8 +185,8 @@ export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ journa
             <p className="text-slate-600">{schoolConfig.city}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p className="font-bold text-slate-900">Guru Mata Pelajaran</p>
             <div className="h-16"></div>
-            <p className="font-bold underline text-slate-900">&nbsp;</p>
-            <p className="text-[11px] text-slate-600">NIP. -</p>
+            <p className="font-bold underline text-slate-900">{currentUser.name}</p>
+            <p className="text-[11px] text-slate-600">NIP. {currentUser.nip}</p>
           </div>
         </div>
       </div>

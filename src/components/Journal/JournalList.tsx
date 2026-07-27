@@ -28,8 +28,11 @@ export const JournalList: React.FC<JournalListProps> = ({
   const [selectedTeacher, setSelectedTeacher] = useState('ALL');
   const [viewingJournal, setViewingJournal] = useState<JournalEntry | null>(null);
 
+  // Guru hanya melihat jurnalnya sendiri; admin melihat semua.
+  const scopedJournals = currentUser.role === 'admin' ? journals : journals.filter(j => j.teacherId === currentUser.id);
+
   // Filter journals
-  const filteredJournals = journals.filter(j => {
+  const filteredJournals = scopedJournals.filter(j => {
     const matchesSearch = 
       j.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
       j.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -97,16 +100,18 @@ export const JournalList: React.FC<JournalListProps> = ({
             ))}
           </select>
 
-          <select
-            value={selectedTeacher}
-            onChange={e => setSelectedTeacher(e.target.value)}
-            className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 cursor-pointer dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-800"
-          >
-            <option value="ALL">Semua Guru</option>
-            {teachers.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          {currentUser.role === 'admin' && (
+            <select
+              value={selectedTeacher}
+              onChange={e => setSelectedTeacher(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 cursor-pointer dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-800"
+            >
+              <option value="ALL">Semua Guru</option>
+              {teachers.map(t => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 

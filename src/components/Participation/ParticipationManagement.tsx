@@ -37,7 +37,7 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
     const initial: Record<string, number> = {};
     students.forEach(s => {
       const existing = existingForDate.find(p => p.studentId === s.id);
-      initial[s.id] = existing ? existing.score : 80;
+      initial[s.id] = existing ? existing.score : 30;
     });
     setScores(initial);
   }, [students, date, allParticipations, classId]);
@@ -48,7 +48,7 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
 
   const resetAll = () => {
     const reset: Record<string, number> = {};
-    students.forEach(s => { reset[s.id] = 80; });
+    students.forEach(s => { reset[s.id] = 30; });
     setScores(reset);
   };
 
@@ -60,7 +60,7 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
         studentId: s.id,
         classId,
         date,
-        score: scores[s.id] ?? 80,
+        score: scores[s.id] ?? 30,
         teacherId: currentUser.id,
         semester: DEFAULT_SEMESTER,
         academicYear: DEFAULT_ACADEMIC_YEAR,
@@ -135,7 +135,7 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
           )}
           <div className="flex justify-end">
             <button onClick={resetAll} className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer">
-              <RotateCcw size={12} /> Reset semua ke 80
+              <RotateCcw size={12} /> Reset semua ke 30
             </button>
           </div>
           <div className="space-y-1.5">
@@ -146,7 +146,7 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
                   <button onClick={() => adjustScore(s.id, -5)} className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer">
                     <Minus size={12} />
                   </button>
-                  <span className="w-10 text-center text-sm font-bold text-slate-900 dark:text-white">{scores[s.id] ?? 80}</span>
+                  <span className="w-10 text-center text-sm font-bold text-slate-900 dark:text-white">{scores[s.id] ?? 30}</span>
                   <button onClick={() => adjustScore(s.id, 5)} className="w-6 h-6 rounded-lg bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 cursor-pointer">
                     <Plus size={12} />
                   </button>

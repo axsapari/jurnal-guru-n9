@@ -180,6 +180,21 @@ export class StorageService {
     return data.publicUrl;
   }
 
+  // Upload a teacher/admin profile photo. Reuses the same public "logos"
+  // bucket (already set up with public read/write policies) under an
+  // "avatar-" prefix, so no extra bucket/policy setup is needed.
+  static async uploadAvatar(file: File): Promise<string> {
+    const ext = file.name.split('.').pop() || 'png';
+    const path = `avatar-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from('logos').upload(path, file, {
+      upsert: true,
+      cacheControl: '3600',
+    });
+    assertOk(error, 'uploadAvatar');
+    const { data } = supabase.storage.from('logos').getPublicUrl(path);
+    return data.publicUrl;
+  }
+
   // Users
   static async getUsers(): Promise<User[]> {
     const { data, error } = await supabase.from('users').select('*').order('name');
