@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, LayoutDashboard, FileSpreadsheet, Users, GraduationCap,
-  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays, Info
+  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays, Info, CalendarClock
 } from 'lucide-react';
 import { User, SchoolConfig } from '../types';
 
@@ -61,6 +61,7 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'tp', label: 'Tujuan Pembelajaran (TP)', icon: Target },
     { id: 'participation', label: 'Keaktifan', icon: Sparkles },
     { id: 'calendar', label: 'Kalender', icon: CalendarDays },
+    { id: 'schedule', label: 'Jadwal Mengajar', icon: CalendarClock },
     ...(isAdmin ? [
       { id: 'teachers', label: 'Kelola Guru', icon: UserCheck },
       { id: 'reminders', label: 'Pengingat Guru', icon: Bell, badge: pendingReminderCount }

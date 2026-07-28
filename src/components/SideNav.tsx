@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   BookOpen, LayoutDashboard, FileSpreadsheet, Users,
-  Target, Bell, UserCheck, GraduationCap, Sparkles, CalendarDays
+  Target, Bell, UserCheck, GraduationCap, Sparkles, CalendarDays, CalendarClock
 } from 'lucide-react';
 
 interface SideNavProps {
@@ -20,6 +20,7 @@ const baseNavItems: { id: string; label: string; icon: typeof LayoutDashboard; b
   { id: 'tp', label: 'TP', icon: Target },
   { id: 'participation', label: 'Keaktifan', icon: Sparkles },
   { id: 'calendar', label: 'Kalender', icon: CalendarDays },
+  { id: 'schedule', label: 'Jadwal', icon: CalendarClock },
 ];
 
 export const SideNav: React.FC<SideNavProps> = ({ activeTab, setActiveTab, isAdmin, pendingReminderCount = 0 }) => {

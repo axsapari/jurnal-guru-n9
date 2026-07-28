@@ -19,6 +19,7 @@ import { TeacherManagement } from './components/Management/TeacherManagement';
 import { GradesManagement } from './components/Grades/GradesManagement';
 import { ParticipationManagement } from './components/Participation/ParticipationManagement';
 import { CalendarView } from './components/Calendar/CalendarView';
+import { ScheduleListView } from './components/Schedule/ScheduleListView';
 import { BackupRestoreModal } from './components/Management/BackupRestoreModal';
 import { FooterCredit, AboutModal } from './components/DeveloperCredit';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
@@ -62,7 +63,9 @@ export default function App() {
 
   // Modals
   const [showJournalModal, setShowJournalModal] = useState<boolean>(false);
+  const [editingJournalEntry, setEditingJournalEntry] = useState<JournalEntry | null>(null);
   const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
+  const [editingActivityEntry, setEditingActivityEntry] = useState<JournalEntry | null>(null);
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
   const [showBackupModal, setShowBackupModal] = useState<boolean>(false);
   const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
@@ -258,6 +261,15 @@ export default function App() {
             currentUser={currentUser}
             onRefresh={refreshState}
             onOpenNewJournal={() => setShowJournalModal(true)}
+            onEditJournal={(entry) => {
+              if (entry.entryType === 'kegiatan_lain') {
+                setEditingActivityEntry(entry);
+                setShowActivityModal(true);
+              } else {
+                setEditingJournalEntry(entry);
+                setShowJournalModal(true);
+              }
+            }}
           />
         )}
 
@@ -320,6 +332,15 @@ export default function App() {
           />
         )}
 
+        {/* TAB 8b: Jadwal Mengajar */}
+        {activeTab === 'schedule' && (
+          <ScheduleListView
+            currentUser={currentUser}
+            classes={classes}
+            teachers={users}
+          />
+        )}
+
         {/* TAB 9: Kelola Guru (Admin) */}
         {activeTab === 'teachers' && isAdmin && (
           <TeacherManagement
@@ -343,18 +364,20 @@ export default function App() {
       {/* Journal Entry Input Form Modal */}
       <JournalFormModal
         isOpen={showJournalModal}
-        onClose={() => setShowJournalModal(false)}
+        onClose={() => { setShowJournalModal(false); setEditingJournalEntry(null); }}
         currentUser={currentUser}
         classes={classes}
         learningObjectives={learningObjectives}
+        editingEntry={editingJournalEntry}
         onSaved={handleJournalSaved}
       />
 
       {/* Non-teaching Activity Log Modal */}
       <ActivityFormModal
         isOpen={showActivityModal}
-        onClose={() => setShowActivityModal(false)}
+        onClose={() => { setShowActivityModal(false); setEditingActivityEntry(null); }}
         currentUser={currentUser}
+        editingEntry={editingActivityEntry}
         onSaved={handleJournalSaved}
       />
 

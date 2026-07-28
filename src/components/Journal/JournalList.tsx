@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   BookOpen, Search, Filter, Calendar, Users, Camera, 
-  Trash2, Eye, FileSpreadsheet, CheckCircle2, Clock, X, FileText, Check, AlertTriangle, Briefcase
+  Trash2, Eye, FileSpreadsheet, CheckCircle2, Clock, X, FileText, Check, AlertTriangle, Briefcase, Pencil
 } from 'lucide-react';
 import { JournalEntry, ClassRoom, User, AttendanceStatus } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -14,6 +14,7 @@ interface JournalListProps {
   currentUser: User;
   onRefresh: () => void;
   onOpenNewJournal: () => void;
+  onEditJournal: (entry: JournalEntry) => void;
 }
 
 export const JournalList: React.FC<JournalListProps> = ({
@@ -22,7 +23,8 @@ export const JournalList: React.FC<JournalListProps> = ({
   teachers,
   currentUser,
   onRefresh,
-  onOpenNewJournal
+  onOpenNewJournal,
+  onEditJournal
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClass, setSelectedClass] = useState('ALL');
@@ -191,13 +193,22 @@ export const JournalList: React.FC<JournalListProps> = ({
                 </button>
 
                 {(currentUser.role === 'admin' || currentUser.id === j.teacherId) && (
-                  <button
-                    onClick={() => handleDelete(j.id)}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
-                    title="Hapus Jurnal"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => onEditJournal(j)}
+                      className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
+                      title="Edit Jurnal"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(j.id)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
+                      title="Hapus Jurnal"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

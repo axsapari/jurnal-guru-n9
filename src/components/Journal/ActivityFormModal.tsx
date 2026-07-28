@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Briefcase, Check, Camera, Calendar } from 'lucide-react';
 import { User, JournalEntry } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -9,6 +9,7 @@ interface ActivityFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentUser: User;
+  editingEntry?: JournalEntry | null;
   onSaved: (entry: JournalEntry) => void;
 }
 
@@ -21,7 +22,7 @@ const ACTIVITY_TYPES = [
   'Lainnya',
 ];
 
-export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, currentUser, onSaved }) => {
+export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, onClose, currentUser, editingEntry, onSaved }) => {
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityType, setActivityType] = useState(ACTIVITY_TYPES[0]);
   const [description, setDescription] = useState('');
@@ -30,6 +31,21 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   const [showSuccess, setShowSuccess] = useState(false);
 
   useEscapeKey(isOpen && !isSubmitting, onClose);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    if (editingEntry) {
+      setDate(editingEntry.date);
+      setActivityType(ACTIVITY_TYPES.includes(editingEntry.subject) ? editingEntry.subject : ACTIVITY_TYPES[ACTIVITY_TYPES.length - 1]);
+      setDescription(editingEntry.summary);
+      setPhotoUrl(editingEntry.photoUrl || '');
+    } else {
+      setDate(new Date().toISOString().slice(0, 10));
+      setActivityType(ACTIVITY_TYPES[0]);
+      setDescription('');
+      setPhotoUrl('');
+    }
+  }, [isOpen, editingEntry]);
 
   if (!isOpen) return null;
 
@@ -59,12 +75,12 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     setIsSubmitting(true);
     try {
       const entry: JournalEntry = {
-        id: 'act-' + Date.now(),
+        id: editingEntry?.id || 'act-' + Date.now(),
         entryType: 'kegiatan_lain',
         date,
         timeSlot: activityType,
-        teacherId: currentUser.id,
-        teacherName: currentUser.name,
+        teacherId: editingEntry?.teacherId || currentUser.id,
+        teacherName: editingEntry?.teacherName || currentUser.name,
         classId: '',
         className: '',
         subject: activityType,
@@ -76,7 +92,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
         incidents: [],
         photoUrl: photoUrl || undefined,
         syncStatus: 'pending',
-        createdAt: new Date().toISOString(),
+        createdAt: editingEntry?.createdAt || new Date().toISOString(),
       };
 
       const saved = await StorageService.saveJournalEntry(entry);
@@ -97,7 +113,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
               <Briefcase size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-sm">Catat Kegiatan Lain</h3>
+              <h3 className="font-bold text-slate-900 dark:text-white text-sm">{editingEntry ? 'Edit Kegiatan' : 'Catat Kegiatan Lain'}</h3>
               <p className="text-[11px] text-slate-500 dark:text-slate-400">Untuk aktivitas selain mengajar di kelas</p>
             </div>
           </div>
@@ -174,7 +190,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
               disabled={isSubmitting}
               className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
             >
-              {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>Simpan Kegiatan</span></>}
+              {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>{editingEntry ? 'Simpan Perubahan' : 'Simpan Kegiatan'}</span></>}
             </button>
           </div>
         </form>
@@ -182,7 +198,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
 
       <SuccessPopup
         isOpen={showSuccess}
-        message="Kegiatan berhasil dicatat."
+        message={editingEntry ? "Perubahan kegiatan berhasil disimpan." : "Kegiatan berhasil dicatat."}
         onClose={() => {
           setShowSuccess(false);
           onClose();

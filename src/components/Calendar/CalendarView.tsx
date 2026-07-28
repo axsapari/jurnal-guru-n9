@@ -234,6 +234,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
             const hasEntries = dayJournals.length > 0;
             const missing = isSchoolDayMissingJournal(day);
             const isToday = ds === today.toISOString().slice(0, 10);
+            const dayScheduleCount = getScheduleForDate(ds).length;
             return (
               <button
                 key={ds}
@@ -247,7 +248,11 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
                 } ${isToday ? 'ring-2 ring-indigo-500' : ''}`}
               >
                 <span>{day}</span>
-                {hasEntries && <span className="text-[9px] font-normal">{dayJournals.length} jurnal</span>}
+                {hasEntries ? (
+                  <span className="text-[9px] font-normal">{dayJournals.length} jurnal</span>
+                ) : dayScheduleCount > 0 ? (
+                  <span className="text-[9px] font-normal">{dayScheduleCount}x jadwal</span>
+                ) : null}
               </button>
             );
           })}

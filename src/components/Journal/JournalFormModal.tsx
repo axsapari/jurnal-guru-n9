@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   X, Camera, Plus, Check, UserCheck, AlertCircle, 
   Trash2, Sparkles, BookOpen, Target, Calendar, Clock, FileText, Upload, Shield
@@ -18,6 +18,7 @@ interface JournalFormModalProps {
   currentUser: User;
   classes: ClassRoom[];
   learningObjectives: LearningObjective[];
+  editingEntry?: JournalEntry | null;
   onSaved: (entry: JournalEntry) => void;
 }
 
@@ -27,6 +28,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   currentUser,
   classes,
   learningObjectives,
+  editingEntry,
   onSaved
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -89,6 +91,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
   const activeClass = scopedClasses.find(c => c.id === selectedClassId) || scopedClasses[0];
   const [studentsInClass, setStudentsInClass] = useState<Student[]>([]);
+  const pendingEditAttendance = useRef<Record<string, AttendanceStatus> | null>(null);
 
   // Fetch students & initialize attendance whenever the selected class changes
   useEffect(() => {
@@ -98,8 +101,10 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
         if (cancelled) return;
         setStudentsInClass(list);
         const initialAtt: Record<string, AttendanceStatus> = {};
-        list.forEach(s => { initialAtt[s.id] = 'hadir'; });
+        const savedAtt = pendingEditAttendance.current;
+        list.forEach(s => { initialAtt[s.id] = savedAtt?.[s.id] || 'hadir'; });
         setAttendance(initialAtt);
+        pendingEditAttendance.current = null; // hanya dipakai sekali saat buka mode edit
       });
     } else {
       setStudentsInClass([]);
@@ -206,11 +211,11 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
     const tpDescriptions = selectedTps.map(tp => `${tp.code}: ${tp.description}`);
 
     const newJournal: JournalEntry = {
-      id: `JRNL-${date.replace(/-/g, '')}-${activeClass.name}-${Math.floor(Math.random() * 899 + 100)}`,
+      id: editingEntry?.id || `JRNL-${date.replace(/-/g, '')}-${activeClass.name}-${Math.floor(Math.random() * 899 + 100)}`,
       date,
       timeSlot,
-      teacherId: currentUser.id,
-      teacherName: currentUser.name,
+      teacherId: editingEntry?.teacherId || currentUser.id,
+      teacherName: editingEntry?.teacherName || currentUser.name,
       classId: selectedClassId,
       className: activeClass ? activeClass.name : 'Kelas',
       subject,
@@ -230,7 +235,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       photoDriveId,
       photoFileName,
       syncStatus: 'pending',
-      createdAt: new Date().toISOString()
+      createdAt: editingEntry?.createdAt || new Date().toISOString()
     };
 
     const saved = await StorageService.saveJournalEntry(newJournal);
@@ -242,6 +247,37 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   };
 
   useEscapeKey(isOpen && !isSubmitting, onClose);
+
+  // Isi ulang form saat modal dibuka: mode edit -> isi dari editingEntry, mode tambah -> reset ke default
+  useEffect(() => {
+    if (!isOpen) return;
+    if (editingEntry) {
+      setDate(editingEntry.date);
+      setSelectedClassId(editingEntry.classId);
+      setSubject(editingEntry.subject);
+      setTimeSlot(editingEntry.timeSlot);
+      setSelectedTpIds(editingEntry.tpIds || []);
+      setSummary(editingEntry.summary);
+      setIncidents(editingEntry.incidents || []);
+      setPhotoUrl(editingEntry.photoUrl || '');
+      setPhotoDriveId(editingEntry.photoDriveId || '');
+      setPhotoFileName(editingEntry.photoFileName || '');
+      pendingEditAttendance.current = editingEntry.attendance || {};
+    } else {
+      setDate(todayStr);
+      setSelectedClassId(scopedClasses[0]?.id || '');
+      setSubject(subjectOptions[0] || '');
+      setTimeSlot('Jam ke 1-2 (07:30 - 09:00)');
+      setSelectedTpIds([]);
+      setSummary('');
+      setIncidents([]);
+      setPhotoUrl('');
+      setPhotoDriveId('');
+      setPhotoFileName('');
+      pendingEditAttendance.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, editingEntry]);
 
   if (!isOpen) return null;
 
@@ -266,8 +302,8 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
               <BookOpen size={18} />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base">Input Jurnal Harian & Absensi Siswa</h3>
-              <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">Pengisian terpadu kegiatan mengajar & catatan kelas</p>
+              <h3 className="font-bold text-sm sm:text-base">{editingEntry ? 'Edit Jurnal Harian & Absensi Siswa' : 'Input Jurnal Harian & Absensi Siswa'}</h3>
+              <p className="text-xs text-slate-400 dark:text-slate-500 dark:text-slate-400">{editingEntry ? 'Perbarui data jurnal yang sudah tersimpan' : 'Pengisian terpadu kegiatan mengajar & catatan kelas'}</p>
             </div>
           </div>
 
@@ -689,7 +725,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                 disabled={isSubmitting}
                 className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 disabled:opacity-60 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
               >
-                {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>Simpan Jurnal & Absensi</span></>}
+                {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>{editingEntry ? 'Simpan Perubahan' : 'Simpan Jurnal & Absensi'}</span></>}
               </button>
             </div>
           </div>
@@ -698,7 +734,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
       <SuccessPopup
         isOpen={showSuccess}
-        message="Jurnal harian & absensi berhasil disimpan."
+        message={editingEntry ? "Perubahan jurnal berhasil disimpan." : "Jurnal harian & absensi berhasil disimpan."}
         onClose={() => {
           setShowSuccess(false);
           onClose();

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, PlusCircle, CheckCircle, Clock, Calendar, 
   Users, Sparkles, FileText, Camera, AlertCircle, Briefcase
 } from 'lucide-react';
-import { User, JournalEntry, ClassRoom } from '../../types';
+import { User, JournalEntry, ClassRoom, ScheduleEntry } from '../../types';
+import { StorageService } from '../../services/storageService';
 
 interface TeacherDashboardProps {
   currentUser: User;
@@ -23,6 +24,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onViewJournalDetails
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
+
+  const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
+  useEffect(() => {
+    StorageService.getSchedule().then(list => setSchedule(list.filter(s => s.teacherId === currentUser.id)));
+  }, [currentUser.id]);
+
+  const getScheduleForDate = (ds: string): ScheduleEntry[] => {
+    const jsWeekday = new Date(ds + 'T00:00:00').getDay();
+    const dayOfWeek = jsWeekday === 0 ? 7 : jsWeekday;
+    return schedule.filter(s => s.dayOfWeek === dayOfWeek).sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
+  };
+  const tomorrowDate = new Date();
+  tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+  const tomorrowStr = tomorrowDate.toISOString().slice(0, 10);
+  const todaySchedule = getScheduleForDate(todayStr);
+  const tomorrowSchedule = getScheduleForDate(tomorrowStr);
 
   // My journals
   const myJournals = journals.filter(j => j.teacherId === currentUser.id);
@@ -64,6 +81,46 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Jadwal Mengajar Hari Ini & Besok */}
+      {(todaySchedule.length > 0 || tomorrowSchedule.length > 0) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <Clock size={13} /> Jadwal Mengajar Hari Ini
+            </h3>
+            {todaySchedule.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-1">Tidak ada jadwal mengajar hari ini.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {todaySchedule.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 p-2 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg text-xs">
+                    <span className="font-bold text-indigo-800 dark:text-indigo-300">{classes.find(c => c.id === s.classId)?.name || '-'} · {s.subject}</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 shrink-0">{s.timeSlot}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
+              <Calendar size={13} /> Jadwal Mengajar Besok
+            </h3>
+            {tomorrowSchedule.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-1">Tidak ada jadwal mengajar besok.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {tomorrowSchedule.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-lg text-xs">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{classes.find(c => c.id === s.classId)?.name || '-'} · {s.subject}</span>
+                    <span className="text-slate-500 dark:text-slate-400 shrink-0">{s.timeSlot}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Today's Alert Banner */}
       {todayMyJournals.length === 0 ? (

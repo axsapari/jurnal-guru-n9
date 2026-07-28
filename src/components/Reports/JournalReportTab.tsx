@@ -194,10 +194,16 @@ export const JournalReportTab: React.FC<JournalReportTabProps> = ({
                       <p className="text-slate-800">{j.summary}</p>
                     </td>
                     <td className="border border-slate-800 p-2 font-sans text-xs">
-                      <p className="font-semibold text-emerald-800">Hadir: {j.attendanceSummary.hadir}</p>
-                      <p className="text-blue-800">Sakit: {j.attendanceSummary.sakit}</p>
-                      <p className="text-amber-800">Izin: {j.attendanceSummary.izin}</p>
-                      <p className="text-rose-800">Alpa: {j.attendanceSummary.alpa}</p>
+                      {j.entryType === 'kegiatan_lain' ? (
+                        <span className="text-slate-400 italic">-</span>
+                      ) : (
+                        <>
+                          <p className="font-semibold text-emerald-800">Hadir: {j.attendanceSummary.hadir}</p>
+                          <p className="text-blue-800">Sakit: {j.attendanceSummary.sakit}</p>
+                          <p className="text-amber-800">Izin: {j.attendanceSummary.izin}</p>
+                          <p className="text-rose-800">Alpa: {j.attendanceSummary.alpa}</p>
+                        </>
+                      )}
                     </td>
                     <td className="border border-slate-800 p-2 font-sans text-[10px]">
                       {j.incidents.length === 0 ? (
@@ -244,7 +250,7 @@ export const JournalReportTab: React.FC<JournalReportTabProps> = ({
           </div>
 
           <div className="text-center w-60">
-            <p className="text-slate-600">{schoolConfig.city}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="text-slate-600">{schoolConfig.city.replace(/^(Kota|Kabupaten)\s+/i, '')}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p className="font-bold text-slate-900">Guru Mata Pelajaran / Pembuat Laporan</p>
             <div className="h-16"></div>
             <p className="font-bold underline text-slate-900">{currentUser.name}</p>

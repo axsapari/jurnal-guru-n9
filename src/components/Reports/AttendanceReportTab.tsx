@@ -182,7 +182,7 @@ export const AttendanceReportTab: React.FC<AttendanceReportTabProps> = ({ curren
             <p className="text-[11px] text-slate-600">NIP. {schoolConfig.headmasterNip}</p>
           </div>
           <div className="text-center w-60">
-            <p className="text-slate-600">{schoolConfig.city}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            <p className="text-slate-600">{schoolConfig.city.replace(/^(Kota|Kabupaten)\s+/i, '')}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
             <p className="font-bold text-slate-900">Guru Mata Pelajaran</p>
             <div className="h-16"></div>
             <p className="font-bold underline text-slate-900">{currentUser.name}</p>
