@@ -195,6 +195,23 @@ export class StorageService {
     return data.publicUrl;
   }
 
+  // Upload a (already compressed) journal/activity photo blob to Supabase
+  // Storage, instead of embedding it as base64 text in the database row.
+  // Reuses the "logos" bucket under a "journal-" prefix — no extra
+  // bucket/policy setup needed.
+  static async uploadJournalPhoto(blob: Blob, hint: string): Promise<{ url: string; fileName: string }> {
+    const safeHint = hint.replace(/[^a-zA-Z0-9-_]/g, '').slice(0, 60);
+    const fileName = `journal-${Date.now()}-${safeHint}.jpg`;
+    const { error } = await supabase.storage.from('logos').upload(fileName, blob, {
+      upsert: true,
+      cacheControl: '3600',
+      contentType: 'image/jpeg',
+    });
+    assertOk(error, 'uploadJournalPhoto');
+    const { data } = supabase.storage.from('logos').getPublicUrl(fileName);
+    return { url: data.publicUrl, fileName };
+  }
+
   // Users
   static async getUsers(): Promise<User[]> {
     const { data, error } = await supabase.from('users').select('*').order('name');

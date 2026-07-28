@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { DatabaseBackup, Download, Upload, AlertTriangle, CheckCircle2, X } from 'lucide-react';
+import { DatabaseBackup, Download, Upload, AlertTriangle, CheckCircle2, X, ImageDown } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { compressDataUrl } from '../../utils/imageUtils';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -15,9 +16,52 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const [isMigratingPhotos, setIsMigratingPhotos] = useState(false);
+  const [migrateProgress, setMigrateProgress] = useState<{ done: number; total: number } | null>(null);
+  const [migrateResult, setMigrateResult] = useState<string | null>(null);
+
   useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
+
+  const handleMigratePhotos = async () => {
+    if (isMigratingPhotos) return;
+    if (!confirm('Pindahkan semua foto jurnal lama (yang masih tersimpan sebagai teks di database) ke Supabase Storage? Proses ini aman dan tidak akan menghapus foto, hanya memindahkan tempat penyimpanannya.')) return;
+
+    setIsMigratingPhotos(true);
+    setMigrateResult(null);
+    try {
+      const journals = await StorageService.getJournals();
+      const toMigrate = journals.filter(j => j.photoUrl && j.photoUrl.startsWith('data:image'));
+      setMigrateProgress({ done: 0, total: toMigrate.length });
+
+      let success = 0;
+      let failed = 0;
+
+      for (let i = 0; i < toMigrate.length; i++) {
+        const entry = toMigrate[i];
+        try {
+          const compressed = await compressDataUrl(entry.photoUrl!);
+          const { url, fileName } = await StorageService.uploadJournalPhoto(compressed, entry.id);
+          await StorageService.saveJournalEntry({ ...entry, photoUrl: url, photoFileName: fileName });
+          success++;
+        } catch {
+          failed++;
+        }
+        setMigrateProgress({ done: i + 1, total: toMigrate.length });
+      }
+
+      setMigrateResult(
+        toMigrate.length === 0
+          ? 'Tidak ada foto lama yang perlu dipindahkan — semua foto sudah tersimpan di Storage.'
+          : `Selesai! ${success} foto berhasil dipindahkan ke Storage${failed > 0 ? `, ${failed} gagal (coba lagi nanti)` : ''}.`
+      );
+      onRestored();
+    } finally {
+      setIsMigratingPhotos(false);
+    }
+  };
+
 
   const handleBackup = async () => {
     setIsBackingUp(true);
@@ -99,6 +143,41 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2"
           >
             <Download size={14} /> {isBackingUp ? 'Menyiapkan...' : 'Download Backup'}
+          </button>
+        </div>
+
+        {/* Migrasi Foto ke Storage */}
+        <div className="p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-2xl border border-emerald-200 dark:border-emerald-800 space-y-2">
+          <h4 className="text-sm font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+            <ImageDown size={15} /> Migrasi Foto Lama ke Storage
+          </h4>
+          <p className="text-xs text-emerald-800 dark:text-emerald-400">
+            Foto jurnal yang diupload sebelum update ini masih tersimpan langsung di database (boros kuota). Klik tombol ini untuk memindahkannya ke Supabase Storage secara otomatis — aman, tidak ada foto yang hilang.
+          </p>
+          {migrateProgress && isMigratingPhotos && (
+            <div className="space-y-1">
+              <div className="w-full bg-emerald-100 dark:bg-emerald-900 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-emerald-600 h-full rounded-full transition-all"
+                  style={{ width: `${migrateProgress.total > 0 ? (migrateProgress.done / migrateProgress.total) * 100 : 0}%` }}
+                ></div>
+              </div>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                Memproses {migrateProgress.done} dari {migrateProgress.total} foto...
+              </p>
+            </div>
+          )}
+          {migrateResult && (
+            <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+              <CheckCircle2 size={13} /> {migrateResult}
+            </p>
+          )}
+          <button
+            onClick={handleMigratePhotos}
+            disabled={isMigratingPhotos}
+            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-2"
+          >
+            <ImageDown size={14} /> {isMigratingPhotos ? 'Memproses...' : 'Mulai Migrasi Foto'}
           </button>
         </div>
 

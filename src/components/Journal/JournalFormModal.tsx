@@ -11,6 +11,7 @@ import { StorageService } from '../../services/storageService';
 import { SUBJECTS } from '../../data/subjects';
 import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { compressImage } from '../../utils/imageUtils';
 
 interface JournalFormModalProps {
   isOpen: boolean;
@@ -115,7 +116,6 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
   // Photo
   const [photoUrl, setPhotoUrl] = useState<string>('');
-  const [photoDriveId, setPhotoDriveId] = useState<string>('');
   const [photoFileName, setPhotoFileName] = useState<string>('');
 
   // Inline TP creation
@@ -183,22 +183,27 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
   };
 
   // Handle Image Upload Simulation / Camera File
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        const driveId = `DRIVE_IMG_${activeClass?.name || 'CLS'}_${date.replace(/-/g, '')}_${Math.floor(Math.random() * 899 + 100)}`;
-        const fileName = `JRNL_${date.replace(/-/g, '')}_${activeClass?.name || 'CLS'}_${subject.replace(/\s+/g, '')}.jpg`;
-        
-        setPhotoUrl(base64);
-        setPhotoDriveId(driveId);
-        setPhotoFileName(fileName);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+    setPhotoError(null);
+    setIsUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const hint = `${activeClass?.name || 'CLS'}_${date.replace(/-/g, '')}_${subject.replace(/\s+/g, '')}`;
+      const { url, fileName } = await StorageService.uploadJournalPhoto(compressed, hint);
+      setPhotoUrl(url);
+      setPhotoFileName(fileName);
+    } catch (err: any) {
+      setPhotoError(`Gagal upload foto: ${err?.message || 'terjadi kesalahan'}`);
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
+
 
   // Inline TP Add
   const handleSaveInlineTp = async () => {
@@ -266,7 +271,6 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       },
       incidents,
       photoUrl,
-      photoDriveId,
       photoFileName,
       syncStatus: 'pending',
       createdAt: editingEntry?.createdAt || new Date().toISOString()
@@ -294,7 +298,6 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       setSummary(editingEntry.summary);
       setIncidents(editingEntry.incidents || []);
       setPhotoUrl(editingEntry.photoUrl || '');
-      setPhotoDriveId(editingEntry.photoDriveId || '');
       setPhotoFileName(editingEntry.photoFileName || '');
       pendingEditAttendance.current = editingEntry.attendance || {};
     } else {
@@ -306,7 +309,6 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       setSummary('');
       setIncidents([]);
       setPhotoUrl('');
-      setPhotoDriveId('');
       setPhotoFileName('');
       pendingEditAttendance.current = null;
     }
@@ -690,15 +692,25 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
             </div>
           </div>
 
-          {/* Section 6: Foto Laporan Visual (Upload / Drive) */}
+          {/* Section 6: Foto Laporan Visual */}
           <div className="space-y-2 pt-2">
             <label className="block text-xs font-bold text-slate-900 flex items-center gap-1.5 dark:text-white">
               <Camera size={15} className="text-rose-600" />
-              <span>Foto Laporan Visual Mengajar (Otomatis Simpan ke Drive)</span>
+              <span>Foto Laporan Visual Mengajar (opsional)</span>
             </label>
 
+            {photoError && (
+              <div className="p-2.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-xl text-xs font-semibold">
+                {photoError}
+              </div>
+            )}
+
             <div className="border-2 border-dashed border-slate-300 hover:border-indigo-400 rounded-2xl p-4 bg-slate-50 text-center transition dark:bg-slate-800/60 dark:border-slate-700 text-slate-900 dark:text-slate-100">
-              {photoUrl ? (
+              {isUploadingPhoto ? (
+                <div className="py-6 flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                  <SavingSpinner label="Mengompresi & mengupload foto..." />
+                </div>
+              ) : photoUrl ? (
                 <div className="space-y-3">
                   <img 
                     src={photoUrl} 
@@ -706,14 +718,12 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                     className="max-h-48 mx-auto rounded-xl border border-slate-200 object-cover shadow-xs dark:border-slate-800" 
                   />
                   <div className="text-xs text-slate-600 font-mono bg-white p-2 rounded-xl border border-slate-200 max-w-md mx-auto dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800 dark:text-slate-500">
-                    <p className="font-bold text-slate-900 dark:text-white">{photoFileName}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-500">ID Drive: {photoDriveId}</p>
+                    <p className="font-bold text-slate-900 dark:text-white truncate">{photoFileName}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
                       setPhotoUrl('');
-                      setPhotoDriveId('');
                       setPhotoFileName('');
                     }}
                     className="text-xs font-bold text-rose-600 hover:underline cursor-pointer"
@@ -730,7 +740,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
                     Klik untuk Ambil Foto / Pilih File
                   </p>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-500">
-                    File foto akan secara otomatis diberi nama ID sesuai Kelas & Tanggal
+                    Foto otomatis dikompres sebelum disimpan agar hemat penyimpanan
                   </p>
                   <input
                     type="file"
@@ -756,7 +766,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isUploadingPhoto}
                 className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700 disabled:opacity-60 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
               >
                 {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>{editingEntry ? 'Simpan Perubahan' : 'Simpan Jurnal & Absensi'}</span></>}

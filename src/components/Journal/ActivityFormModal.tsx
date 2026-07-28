@@ -3,6 +3,7 @@ import { X, Briefcase, Check, Camera, Calendar } from 'lucide-react';
 import { User, JournalEntry } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { useEscapeKey } from '../../hooks/useEscapeKey';
+import { compressImage } from '../../utils/imageUtils';
 import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
 
 interface ActivityFormModalProps {
@@ -56,12 +57,23 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     setPhotoUrl('');
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => setPhotoUrl(reader.result as string);
-    reader.readAsDataURL(file);
+    setPhotoError(null);
+    setIsUploadingPhoto(true);
+    try {
+      const compressed = await compressImage(file);
+      const { url } = await StorageService.uploadJournalPhoto(compressed, `kegiatan_${date.replace(/-/g, '')}`);
+      setPhotoUrl(url);
+    } catch (err: any) {
+      setPhotoError(`Gagal upload foto: ${err?.message || 'terjadi kesalahan'}`);
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -164,7 +176,14 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
             <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 flex items-center gap-1">
               <Camera size={13} className="text-amber-600" /> Foto Bukti (opsional)
             </label>
-            {photoUrl ? (
+            {photoError && (
+              <p className="text-[11px] text-rose-600 dark:text-rose-400 font-semibold mb-1.5">{photoError}</p>
+            )}
+            {isUploadingPhoto ? (
+              <div className="flex items-center justify-center gap-2 p-3 border border-dashed border-slate-300 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400">
+                <SavingSpinner label="Mengupload foto..." />
+              </div>
+            ) : photoUrl ? (
               <div className="flex items-center gap-3 p-2 border border-slate-200 dark:border-slate-700 rounded-xl">
                 <img src={photoUrl} alt="Bukti" className="w-16 h-16 rounded-lg object-cover" />
                 <button type="button" onClick={() => setPhotoUrl('')} className="text-xs text-rose-600 font-semibold cursor-pointer">Hapus foto</button>
@@ -187,7 +206,7 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
             </button>
             <button
               type="submit"
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingPhoto}
               className="px-6 py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-extrabold rounded-xl text-xs shadow-md transition cursor-pointer flex items-center gap-2"
             >
               {isSubmitting ? <SavingSpinner /> : <><Check size={16} /><span>{editingEntry ? 'Simpan Perubahan' : 'Simpan Kegiatan'}</span></>}
