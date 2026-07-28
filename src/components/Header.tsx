@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, LayoutDashboard, FileSpreadsheet, Users, GraduationCap,
-  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays, Info, CalendarClock
+  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays, Info, CalendarClock, User as UserIcon
 } from 'lucide-react';
 import { User, SchoolConfig } from '../types';
 
@@ -15,6 +15,7 @@ interface HeaderProps {
   onOpenSchoolSettings: () => void;
   onOpenBackupModal?: () => void;
   onOpenAboutModal?: () => void;
+  onOpenMyProfile?: () => void;
   onLogout?: () => void;
   pendingReminderCount?: number;
 }
@@ -29,6 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSchoolSettings,
   onOpenBackupModal,
   onOpenAboutModal,
+  onOpenMyProfile,
   onLogout,
   pendingReminderCount = 0
 }) => {
@@ -223,6 +225,18 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <DatabaseBackup size={15} />
                         <span>Backup & Restore Data</span>
+                      </button>
+                    )}
+                    {onOpenMyProfile && (
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          onOpenMyProfile();
+                        }}
+                        className="w-full flex items-center gap-2 p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        <UserIcon size={15} />
+                        <span>Profil Saya</span>
                       </button>
                     )}
                     {onOpenAboutModal && (

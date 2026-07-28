@@ -35,6 +35,11 @@ export const JournalList: React.FC<JournalListProps> = ({
   // Guru hanya melihat jurnalnya sendiri; admin melihat semua.
   const scopedJournals = currentUser.role === 'admin' ? journals : journals.filter(j => j.teacherId === currentUser.id);
 
+  // Dropdown filter kelas juga dibatasi ke kelas yang diampu guru (kalau di-set admin).
+  const scopedClasses = (currentUser.role === 'admin' || !currentUser.classIds || currentUser.classIds.length === 0)
+    ? classes
+    : classes.filter(c => currentUser.classIds!.includes(c.id));
+
   // Filter journals
   const filteredJournals = scopedJournals.filter(j => {
     const matchesSearch = 
@@ -99,7 +104,7 @@ export const JournalList: React.FC<JournalListProps> = ({
             className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 cursor-pointer dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-800"
           >
             <option value="ALL">Semua Kelas</option>
-            {classes.map(c => (
+            {scopedClasses.map(c => (
               <option key={c.id} value={c.id}>Kelas {c.name}</option>
             ))}
           </select>

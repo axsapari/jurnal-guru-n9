@@ -144,7 +144,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       setStudentsInClass([]);
     }
     return () => { cancelled = true; };
-  }, [selectedClassId]);
+  }, [selectedClassId, editingEntry?.id]);
 
   // Set all students as 'hadir'
   const handleMarkAllHadir = () => {
@@ -319,13 +319,17 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
   // TP hanya yang sesuai kelas (tingkat) DAN mata pelajaran yang dipilih,
   // supaya daftarnya tidak kepanjangan dan tidak salah pilih TP mapel lain.
-  const availableTps = learningObjectives.filter(tp => {
-    const matchesClassSubject = tp.subject.toLowerCase() === subject.toLowerCase() && tp.grade === activeClass?.grade;
-    if (!matchesClassSubject) return false;
-    if (!tpSearchQuery.trim()) return true;
-    const q = tpSearchQuery.toLowerCase();
-    return tp.code.toLowerCase().includes(q) || tp.description.toLowerCase().includes(q);
-  });
+  const availableTps = learningObjectives
+    .filter(tp => {
+      const matchesClassSubject = tp.subject.toLowerCase() === subject.toLowerCase() && tp.grade === activeClass?.grade;
+      if (!matchesClassSubject) return false;
+      if (!tpSearchQuery.trim()) return true;
+      const q = tpSearchQuery.toLowerCase();
+      return tp.code.toLowerCase().includes(q) || tp.description.toLowerCase().includes(q);
+    })
+    // Urutkan "natural" berdasarkan kode (TP.KKA.7.2 sebelum TP.KKA.7.10),
+    // bukan urutan abjad biasa yang menganggap "10" < "2".
+    .sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">

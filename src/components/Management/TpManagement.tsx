@@ -48,7 +48,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                           tp.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = subjectFilter === 'ALL' || tp.subject === subjectFilter;
     return matchesSearch && matchesSubject;
-  });
+  }).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
 
   const handleAddTp = async (e: React.FormEvent) => {
     e.preventDefault();

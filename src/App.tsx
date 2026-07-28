@@ -22,6 +22,7 @@ import { CalendarView } from './components/Calendar/CalendarView';
 import { ScheduleListView } from './components/Schedule/ScheduleListView';
 import { BackupRestoreModal } from './components/Management/BackupRestoreModal';
 import { FooterCredit, AboutModal } from './components/DeveloperCredit';
+import { MyProfileModal } from './components/MyProfileModal';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
@@ -69,6 +70,7 @@ export default function App() {
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
   const [showBackupModal, setShowBackupModal] = useState<boolean>(false);
   const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
+  const [showMyProfileModal, setShowMyProfileModal] = useState<boolean>(false);
 
   const refreshState = async (activeUserId?: string) => {
     try {
@@ -207,6 +209,7 @@ export default function App() {
         onOpenSchoolSettings={() => setShowSchoolSettingsModal(true)}
         onOpenBackupModal={() => setShowBackupModal(true)}
         onOpenAboutModal={() => setShowAboutModal(true)}
+        onOpenMyProfile={() => setShowMyProfileModal(true)}
         onLogout={handleLogout}
         pendingReminderCount={pendingReminderCount}
       />
@@ -404,6 +407,17 @@ export default function App() {
         isOpen={showAboutModal}
         onClose={() => setShowAboutModal(false)}
         schoolName={schoolConfig?.schoolName}
+      />
+
+      {/* Self-service Profile Editor */}
+      <MyProfileModal
+        isOpen={showMyProfileModal}
+        onClose={() => setShowMyProfileModal(false)}
+        currentUser={currentUser}
+        onSaved={(updatedUser) => {
+          setCurrentUser(updatedUser);
+          refreshState();
+        }}
       />
     </div>
   );

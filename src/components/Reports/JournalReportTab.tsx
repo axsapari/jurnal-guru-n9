@@ -218,16 +218,11 @@ export const JournalReportTab: React.FC<JournalReportTabProps> = ({
                     </td>
                     <td className="border border-slate-800 p-2 text-center font-sans">
                       {j.photoUrl ? (
-                        <div className="space-y-1">
-                          <img 
-                            src={j.photoUrl} 
-                            alt="Bukti Visual" 
-                            className="w-20 h-16 object-cover mx-auto rounded border border-slate-300" 
-                          />
-                          <p className="text-[8px] font-mono text-slate-500 break-all">
-                            {j.photoFileName || j.photoDriveId}
-                          </p>
-                        </div>
+                        <img 
+                          src={j.photoUrl} 
+                          alt="Bukti Visual" 
+                          className="w-20 h-16 object-cover mx-auto rounded border border-slate-300" 
+                        />
                       ) : (
                         <span className="text-slate-400 italic text-[10px]">Tanpa Foto</span>
                       )}
