@@ -108,6 +108,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ schoolConfig, onLogged
         <p className="text-center text-[11px] text-slate-400 dark:text-slate-500 mt-4 dark:text-slate-400">
           Lupa kata sandi? Minta admin sekolah untuk mereset akun kamu.
         </p>
+        <p className="text-center text-[10px] text-slate-300 dark:text-slate-600 mt-2">
+          Jurnal Guru — dikembangkan oleh <span className="font-semibold">Agus Sugiharto Sapari</span>
+        </p>
       </div>
     </div>
   );

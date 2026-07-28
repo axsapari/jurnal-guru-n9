@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   BookOpen, Search, Filter, Calendar, Users, Camera, 
-  Trash2, Eye, FileSpreadsheet, CheckCircle2, Clock, X, FileText, Check, AlertTriangle
+  Trash2, Eye, FileSpreadsheet, CheckCircle2, Clock, X, FileText, Check, AlertTriangle, Briefcase
 } from 'lucide-react';
 import { JournalEntry, ClassRoom, User, AttendanceStatus } from '../../types';
 import { StorageService } from '../../services/storageService';
@@ -129,14 +129,24 @@ export const JournalList: React.FC<JournalListProps> = ({
           {filteredJournals.map(j => (
             <div
               key={j.id}
-              className="bg-white rounded-2xl border border-slate-200/80 hover:border-indigo-300 p-5 shadow-xs hover:shadow-md transition space-y-4 flex flex-col justify-between dark:bg-slate-900 dark:border-slate-800 dark:border-slate-800"
+              className={`bg-white rounded-2xl border p-5 shadow-xs hover:shadow-md transition space-y-4 flex flex-col justify-between dark:bg-slate-900 ${
+                j.entryType === 'kegiatan_lain'
+                  ? 'border-amber-200 hover:border-amber-300 dark:border-amber-900'
+                  : 'border-slate-200/80 hover:border-indigo-300 dark:border-slate-800'
+              }`}
             >
               <div className="space-y-3">
                 {/* Card Header: Class & Date */}
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
-                    Kelas {j.className}
-                  </span>
+                  {j.entryType === 'kegiatan_lain' ? (
+                    <span className="text-xs font-bold text-amber-700 bg-amber-50 dark:bg-amber-950/50 dark:text-amber-300 px-2.5 py-1 rounded-lg border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                      <Briefcase size={12} /> Kegiatan Lain
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100">
+                      Kelas {j.className}
+                    </span>
+                  )}
                   <span className="text-xs font-medium text-slate-500 flex items-center gap-1 dark:text-slate-400 dark:text-slate-500">
                     <Calendar size={13} /> {j.date}
                   </span>
@@ -154,19 +164,21 @@ export const JournalList: React.FC<JournalListProps> = ({
                   {j.summary}
                 </p>
 
-                {/* Attendance Counter */}
-                <div className="flex items-center justify-between text-xs pt-1">
-                  <div className="flex items-center gap-1.5 text-slate-700 font-semibold dark:text-slate-300">
-                    <Users size={14} className="text-indigo-600" />
-                    <span>Hadir: {j.attendanceSummary.hadir}/{j.attendanceSummary.total}</span>
-                  </div>
+                {/* Attendance Counter (hanya untuk jurnal mengajar) */}
+                {j.entryType !== 'kegiatan_lain' && (
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <div className="flex items-center gap-1.5 text-slate-700 font-semibold dark:text-slate-300">
+                      <Users size={14} className="text-indigo-600" />
+                      <span>Hadir: {j.attendanceSummary.hadir}/{j.attendanceSummary.total}</span>
+                    </div>
 
-                  {j.photoUrl && (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
-                      <Camera size={12} /> Foto Drive
-                    </span>
-                  )}
-                </div>
+                    {j.photoUrl && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">
+                        <Camera size={12} /> Foto Drive
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}

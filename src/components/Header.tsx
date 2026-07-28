@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BookOpen, LayoutDashboard, FileSpreadsheet, Users, GraduationCap,
-  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays
+  Target, Bell, UserCheck, Settings, ChevronDown, Sun, Moon, Building2, LogOut, DatabaseBackup, Sparkles, CalendarDays, Info
 } from 'lucide-react';
 import { User, SchoolConfig } from '../types';
 
@@ -14,6 +14,7 @@ interface HeaderProps {
   onSelectUser: (user: User) => void;
   onOpenSchoolSettings: () => void;
   onOpenBackupModal?: () => void;
+  onOpenAboutModal?: () => void;
   onLogout?: () => void;
   pendingReminderCount?: number;
 }
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectUser,
   onOpenSchoolSettings,
   onOpenBackupModal,
+  onOpenAboutModal,
   onLogout,
   pendingReminderCount = 0
 }) => {
@@ -220,6 +222,18 @@ export const Header: React.FC<HeaderProps> = ({
                       >
                         <DatabaseBackup size={15} />
                         <span>Backup & Restore Data</span>
+                      </button>
+                    )}
+                    {onOpenAboutModal && (
+                      <button
+                        onClick={() => {
+                          setShowUserDropdown(false);
+                          onOpenAboutModal();
+                        }}
+                        className="w-full flex items-center gap-2 p-2 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        <Info size={15} />
+                        <span>Tentang Aplikasi</span>
                       </button>
                     )}
                     {onLogout && (

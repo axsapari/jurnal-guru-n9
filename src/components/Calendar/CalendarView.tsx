@@ -64,6 +64,22 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
 
   const dateStr = (day: number) => `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
+  // Ambil jadwal mengajar (milik guru yang login saja) untuk satu tanggal tertentu
+  const getScheduleForDate = (ds: string): ScheduleEntry[] => {
+    const jsWeekday = new Date(ds + 'T00:00:00').getDay(); // 0=Minggu
+    const dayOfWeek = jsWeekday === 0 ? 7 : jsWeekday;
+    return myScheduleThisView
+      .filter(s => s.dayOfWeek === dayOfWeek)
+      .sort((a, b) => a.timeSlot.localeCompare(b.timeSlot));
+  };
+
+  const todayStr = today.toISOString().slice(0, 10);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().slice(0, 10);
+  const todaySchedule = getScheduleForDate(todayStr);
+  const tomorrowSchedule = getScheduleForDate(tomorrowStr);
+
   // Hari sekolah (Senin-Sabtu) yang seharusnya ada jadwal mengajar tapi belum ada jurnal
   const isSchoolDayMissingJournal = (day: number) => {
     const jsDate = new Date(viewYear, viewMonth, day);
@@ -124,6 +140,41 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
 
   return (
     <div className="space-y-5">
+      {!isAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Jadwal Mengajar Hari Ini</h3>
+            {todaySchedule.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-2">Tidak ada jadwal mengajar hari ini.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {todaySchedule.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 p-2 bg-indigo-50 dark:bg-indigo-950/40 rounded-lg text-xs">
+                    <span className="font-bold text-indigo-800 dark:text-indigo-300">{classes.find(c => c.id === s.classId)?.name || '-'} · {s.subject}</span>
+                    <span className="text-indigo-600 dark:text-indigo-400 shrink-0">{s.timeSlot}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2">Jadwal Mengajar Besok</h3>
+            {tomorrowSchedule.length === 0 ? (
+              <p className="text-xs text-slate-400 dark:text-slate-500 italic py-2">Tidak ada jadwal mengajar besok.</p>
+            ) : (
+              <div className="space-y-1.5">
+                {tomorrowSchedule.map(s => (
+                  <div key={s.id} className="flex items-center justify-between gap-2 p-2 bg-slate-50 dark:bg-slate-800/60 rounded-lg text-xs">
+                    <span className="font-bold text-slate-700 dark:text-slate-300">{classes.find(c => c.id === s.classId)?.name || '-'} · {s.subject}</span>
+                    <span className="text-slate-500 dark:text-slate-400 shrink-0">{s.timeSlot}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
@@ -212,6 +263,26 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
                 <X size={18} />
               </button>
             </div>
+            {!isAdmin && (() => {
+              const daySchedule = getScheduleForDate(selectedDate);
+              if (daySchedule.length === 0) return null;
+              return (
+                <div className="mb-4">
+                  <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Jadwal Mengajar Kamu</h4>
+                  <div className="space-y-1.5">
+                    {daySchedule.map(s => {
+                      const alreadyFilled = selectedJournals.some(j => j.classId === s.classId && j.subject === s.subject);
+                      return (
+                        <div key={s.id} className={`flex items-center justify-between gap-2 p-2 rounded-lg text-xs ${alreadyFilled ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'}`}>
+                          <span className="font-bold">{classes.find(c => c.id === s.classId)?.name || '-'} · {s.subject}</span>
+                          <span className="shrink-0">{alreadyFilled ? 'Sudah diisi' : s.timeSlot}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
             {selectedJournals.length === 0 ? (
               <p className="text-xs text-slate-500 dark:text-slate-400 italic text-center py-6">Belum ada jurnal terisi tanggal ini.</p>
             ) : (

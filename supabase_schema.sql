@@ -71,6 +71,7 @@ create table if not exists learning_objectives (
 -- 6. Jurnal Harian
 create table if not exists journal_entries (
   id text primary key,
+  entry_type text default 'mengajar', -- 'mengajar' | 'kegiatan_lain'
   date date not null,
   time_slot text,
   teacher_id text references users(id) on delete set null,

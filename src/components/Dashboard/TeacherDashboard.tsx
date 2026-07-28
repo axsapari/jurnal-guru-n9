@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   BookOpen, PlusCircle, CheckCircle, Clock, Calendar, 
-  Users, Sparkles, FileText, Camera, AlertCircle 
+  Users, Sparkles, FileText, Camera, AlertCircle, Briefcase
 } from 'lucide-react';
 import { User, JournalEntry, ClassRoom } from '../../types';
 
@@ -10,6 +10,7 @@ interface TeacherDashboardProps {
   journals: JournalEntry[];
   classes: ClassRoom[];
   onOpenJournalForm: () => void;
+  onOpenActivityForm: () => void;
   onViewJournalDetails: (entry: JournalEntry) => void;
 }
 
@@ -18,6 +19,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   journals,
   classes,
   onOpenJournalForm,
+  onOpenActivityForm,
   onViewJournalDetails
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
@@ -44,13 +46,22 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={onOpenJournalForm}
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg transition cursor-pointer"
-          >
-            <PlusCircle size={18} />
-            <span>Isi Jurnal Hari Ini</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={onOpenJournalForm}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm shadow-lg transition cursor-pointer"
+            >
+              <PlusCircle size={18} />
+              <span>Isi Jurnal Hari Ini</span>
+            </button>
+            <button
+              onClick={onOpenActivityForm}
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm shadow-lg transition cursor-pointer"
+            >
+              <Briefcase size={18} />
+              <span>+ Kegiatan Lain</span>
+            </button>
+          </div>
         </div>
       </div>
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Users, BookOpen, CheckCircle, Clock, AlertCircle, Send, 
-  FileText, TrendingUp, Camera, Award, ArrowUpRight, ShieldCheck, HeartPulse, AlertTriangle, CalendarX
+  FileText, TrendingUp, Camera, Award, ArrowUpRight, ShieldCheck, HeartPulse, AlertTriangle, CalendarX, Briefcase
 } from 'lucide-react';
 import { JournalEntry, User, ClassRoom, Student } from '../../types';
 
@@ -11,6 +11,7 @@ interface AdminDashboardProps {
   classes: ClassRoom[];
   students: Student[];
   onOpenJournalForm: () => void;
+  onOpenActivityForm: () => void;
   onSendReminder: (teacher: User) => void;
   onViewJournalDetails: (entry: JournalEntry) => void;
 }
@@ -21,6 +22,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   classes,
   students,
   onOpenJournalForm,
+  onOpenActivityForm,
   onSendReminder,
   onViewJournalDetails
 }) => {
@@ -127,6 +129,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             >
               <BookOpen size={16} />
               <span>+ Buat Jurnal Baru</span>
+            </button>
+            <button
+              onClick={onOpenActivityForm}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-lg transition cursor-pointer"
+            >
+              <Briefcase size={16} />
+              <span>+ Kegiatan Lain</span>
             </button>
           </div>
         </div>

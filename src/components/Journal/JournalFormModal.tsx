@@ -492,51 +492,53 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
 
             {/* Students Attendance Table */}
             <div className="border border-slate-200 rounded-2xl overflow-hidden max-h-60 overflow-y-auto dark:border-slate-800">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-bold uppercase text-[10px] sticky top-0 dark:bg-slate-800 dark:text-slate-300">
-                  <tr>
-                    <th className="px-3 py-2">No</th>
-                    <th className="px-3 py-2">NISN</th>
-                    <th className="px-3 py-2">Nama Siswa</th>
-                    <th className="px-3 py-2 text-center">Status Kehadiran</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 bg-white dark:bg-slate-900">
-                  {studentsInClass.map((student, idx) => {
-                    const currentStatus = attendance[student.id] || 'hadir';
-                    return (
-                      <tr key={student.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                        <td className="px-3 py-2 font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-500">{idx + 1}</td>
-                        <td className="px-3 py-2 text-slate-500 font-mono text-[11px] dark:text-slate-400 dark:text-slate-500">{student.nisn}</td>
-                        <td className="px-3 py-2 font-bold text-slate-900 dark:text-white">{student.name}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center justify-center gap-1">
-                            {[
-                              { id: 'hadir', label: 'Hadir', bg: 'bg-emerald-50 text-emerald-800 border-emerald-300' },
-                              { id: 'sakit', label: 'Sakit', bg: 'bg-blue-50 text-blue-800 border-blue-300' },
-                              { id: 'izin', label: 'Izin', bg: 'bg-amber-50 text-amber-800 border-amber-300' },
-                              { id: 'alpa', label: 'Alpa', bg: 'bg-rose-50 text-rose-800 border-rose-300' }
-                            ].map(st => (
-                              <button
-                                key={st.id}
-                                type="button"
-                                onClick={() => handleAttendanceChange(student.id, st.id as AttendanceStatus)}
-                                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition cursor-pointer ${
-                                  currentStatus === st.id 
-                                    ? `${st.bg} ring-1 ring-slate-900 shadow-xs font-black` 
-                                    : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
-                                }`}
-                              >
-                                {st.label}
-                              </button>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                {/* Header row - desktop only */}
+                <div className="hidden sm:flex items-center gap-3 px-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[10px] sticky top-0">
+                  <span className="w-8">No</span>
+                  <span className="w-24">NISN</span>
+                  <span className="flex-1">Nama Siswa</span>
+                  <span className="w-64 text-center">Status Kehadiran</span>
+                </div>
+
+                {studentsInClass.map((student, idx) => {
+                  const currentStatus = attendance[student.id] || 'hadir';
+                  const statusOptions = [
+                    { id: 'hadir', label: 'Hadir', bg: 'bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700' },
+                    { id: 'sakit', label: 'Sakit', bg: 'bg-blue-50 text-blue-800 border-blue-300 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-700' },
+                    { id: 'izin', label: 'Izin', bg: 'bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700' },
+                    { id: 'alpa', label: 'Alpa', bg: 'bg-rose-50 text-rose-800 border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-700' },
+                  ];
+                  return (
+                    <div key={student.id} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 px-3 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                      <div className="flex items-center gap-3 sm:contents">
+                        <span className="w-8 shrink-0 font-semibold text-slate-500 dark:text-slate-400 text-xs">{idx + 1}</span>
+                        <span className="hidden sm:inline w-24 shrink-0 text-slate-500 font-mono text-[11px] dark:text-slate-400">{student.nisn}</span>
+                        <span className="flex-1 font-bold text-slate-900 dark:text-white text-xs min-w-0">
+                          {student.name}
+                          <span className="sm:hidden block font-normal text-slate-400 dark:text-slate-500 font-mono text-[10px]">{student.nisn}</span>
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 sm:flex sm:w-64 items-center justify-center gap-1 shrink-0">
+                        {statusOptions.map(st => (
+                          <button
+                            key={st.id}
+                            type="button"
+                            onClick={() => handleAttendanceChange(student.id, st.id as AttendanceStatus)}
+                            className={`px-1.5 sm:px-2.5 py-1.5 sm:py-1 rounded-lg text-[10px] sm:text-[11px] font-bold border transition cursor-pointer whitespace-nowrap ${
+                              currentStatus === st.id 
+                                ? `${st.bg} ring-1 ring-slate-900 dark:ring-slate-100 shadow-xs font-black` 
+                                : 'bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700'
+                            }`}
+                          >
+                            {st.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -672,12 +674,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
           </div>
 
           {/* Footer Submit Button */}
-          <div className="pt-4 border-t border-slate-200 flex items-center justify-between dark:border-slate-800">
-            <div className="text-xs text-slate-500 flex items-center gap-1 dark:text-slate-400 dark:text-slate-500">
-              <Shield size={14} className="text-emerald-600" />
-              <span>Dukungan Mode Offline & Auto-Sync Google Sheets</span>
-            </div>
-
+          <div className="pt-4 border-t border-slate-200 flex items-center justify-end dark:border-slate-800">
             <div className="flex gap-3">
               <button
                 type="button"

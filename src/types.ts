@@ -70,6 +70,7 @@ export interface IncidentRecord {
 
 export interface JournalEntry {
   id: string;
+  entryType?: 'mengajar' | 'kegiatan_lain'; // default 'mengajar' kalau kosong (data lama)
   date: string; // YYYY-MM-DD
   timeSlot: string; // e.g. "Jam 1-2 (07:30 - 09:00)"
   teacherId: string;

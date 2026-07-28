@@ -11,6 +11,7 @@ import { AdminDashboard } from './components/Dashboard/AdminDashboard';
 import { TeacherDashboard } from './components/Dashboard/TeacherDashboard';
 import { JournalList } from './components/Journal/JournalList';
 import { JournalFormModal } from './components/Journal/JournalFormModal';
+import { ActivityFormModal } from './components/Journal/ActivityFormModal';
 import { ReportGeneratorModal } from './components/Reports/ReportGeneratorModal';
 import { ClassManagement } from './components/Management/ClassManagement';
 import { TpManagement } from './components/Management/TpManagement';
@@ -19,6 +20,7 @@ import { GradesManagement } from './components/Grades/GradesManagement';
 import { ParticipationManagement } from './components/Participation/ParticipationManagement';
 import { CalendarView } from './components/Calendar/CalendarView';
 import { BackupRestoreModal } from './components/Management/BackupRestoreModal';
+import { FooterCredit, AboutModal } from './components/DeveloperCredit';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
@@ -60,8 +62,10 @@ export default function App() {
 
   // Modals
   const [showJournalModal, setShowJournalModal] = useState<boolean>(false);
+  const [showActivityModal, setShowActivityModal] = useState<boolean>(false);
   const [showSchoolSettingsModal, setShowSchoolSettingsModal] = useState<boolean>(false);
   const [showBackupModal, setShowBackupModal] = useState<boolean>(false);
+  const [showAboutModal, setShowAboutModal] = useState<boolean>(false);
 
   const refreshState = async (activeUserId?: string) => {
     try {
@@ -199,6 +203,7 @@ export default function App() {
         onSelectUser={() => {}}
         onOpenSchoolSettings={() => setShowSchoolSettingsModal(true)}
         onOpenBackupModal={() => setShowBackupModal(true)}
+        onOpenAboutModal={() => setShowAboutModal(true)}
         onLogout={handleLogout}
         pendingReminderCount={pendingReminderCount}
       />
@@ -222,6 +227,7 @@ export default function App() {
               classes={classes}
               students={allStudents}
               onOpenJournalForm={() => setShowJournalModal(true)}
+              onOpenActivityForm={() => setShowActivityModal(true)}
               onSendReminder={(teacher) => {
                 setActiveTab('reminders');
               }}
@@ -235,6 +241,7 @@ export default function App() {
               journals={journals}
               classes={classes}
               onOpenJournalForm={() => setShowJournalModal(true)}
+              onOpenActivityForm={() => setShowActivityModal(true)}
               onViewJournalDetails={(entry) => {
                 setActiveTab('journal');
               }}
@@ -331,6 +338,8 @@ export default function App() {
         )}
       </main>
 
+      <FooterCredit />
+
       {/* Journal Entry Input Form Modal */}
       <JournalFormModal
         isOpen={showJournalModal}
@@ -338,6 +347,14 @@ export default function App() {
         currentUser={currentUser}
         classes={classes}
         learningObjectives={learningObjectives}
+        onSaved={handleJournalSaved}
+      />
+
+      {/* Non-teaching Activity Log Modal */}
+      <ActivityFormModal
+        isOpen={showActivityModal}
+        onClose={() => setShowActivityModal(false)}
+        currentUser={currentUser}
         onSaved={handleJournalSaved}
       />
 
@@ -358,6 +375,13 @@ export default function App() {
           onRestored={refreshState}
         />
       )}
+
+      {/* About / Developer Credit Modal */}
+      <AboutModal
+        isOpen={showAboutModal}
+        onClose={() => setShowAboutModal(false)}
+        schoolName={schoolConfig?.schoolName}
+      />
     </div>
   );
 }

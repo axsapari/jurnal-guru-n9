@@ -68,7 +68,7 @@ const tpToDb = (t: LearningObjective) => ({
 });
 
 const journalFromDb = (r: any): JournalEntry => ({
-  id: r.id, date: r.date, timeSlot: r.time_slot, teacherId: r.teacher_id,
+  id: r.id, entryType: r.entry_type || 'mengajar', date: r.date, timeSlot: r.time_slot, teacherId: r.teacher_id,
   teacherName: r.teacher_name, classId: r.class_id, className: r.class_name,
   subject: r.subject, tpIds: r.tp_ids ?? [], tpDescriptions: r.tp_descriptions ?? [],
   summary: r.summary, attendance: r.attendance ?? {},
@@ -78,8 +78,8 @@ const journalFromDb = (r: any): JournalEntry => ({
   syncStatus: r.sync_status, createdAt: r.created_at,
 });
 const journalToDb = (j: JournalEntry) => ({
-  id: j.id, date: j.date, time_slot: j.timeSlot, teacher_id: j.teacherId,
-  teacher_name: j.teacherName, class_id: j.classId, class_name: j.className,
+  id: j.id, entry_type: j.entryType || 'mengajar', date: j.date, time_slot: j.timeSlot, teacher_id: j.teacherId,
+  teacher_name: j.teacherName, class_id: j.classId || null, class_name: j.className,
   subject: j.subject, tp_ids: j.tpIds, tp_descriptions: j.tpDescriptions,
   summary: j.summary, attendance: j.attendance, attendance_summary: j.attendanceSummary,
   incidents: j.incidents, photo_url: j.photoUrl ?? null, photo_drive_id: j.photoDriveId ?? null,
