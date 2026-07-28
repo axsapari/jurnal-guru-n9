@@ -2,7 +2,7 @@ import React from 'react';
 import { Code2, X, Heart, School } from 'lucide-react';
 import { useEscapeKey } from '../hooks/useEscapeKey';
 
-const DEVELOPER_NAME = 'Agus Sugiharto Sapari';
+const DEVELOPER_NAME = 'Agus Sugiharto Sapari, S.Pd.';
 
 export const FooterCredit: React.FC = () => (
   <footer className="w-full py-4 px-4 text-center print:hidden">

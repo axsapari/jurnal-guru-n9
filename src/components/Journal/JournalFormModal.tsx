@@ -69,7 +69,41 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
         .map(s => s.timeSlot)
     )];
   }, [schedule, date, selectedClassId, subject, currentUser.id]);
-  
+
+  // Gabungkan beberapa slot jam berurutan (mis. "Jam ke 1", "Jam ke 2", "Jam ke 3")
+  // jadi satu rentang "Jam ke 1-3 (07:15 - 09:15)" untuk diisi otomatis ke kolom Jam Ke-.
+  const mergedScheduleTimeSlot = React.useMemo(() => {
+    if (scheduledTimeSlots.length === 0) return null;
+
+    const parsed = scheduledTimeSlots
+      .map(ts => {
+        const m = ts.match(/Jam ke\s*(\d+)\s*\(([\d:]+)\s*-\s*([\d:]+)\)/i);
+        if (!m) return null;
+        return { period: parseInt(m[1], 10), start: m[2], end: m[3], raw: ts };
+      })
+      .filter((x): x is { period: number; start: string; end: string; raw: string } => !!x)
+      .sort((a, b) => a.period - b.period);
+
+    if (parsed.length === 0) return scheduledTimeSlots[0]; // format tidak dikenali, pakai apa adanya
+    if (parsed.length === 1) return parsed[0].raw;
+
+    // Cek apakah nomor jam berurutan (1,2,3,...) sebelum digabung jadi satu rentang
+    const isContiguous = parsed.every((p, i) => i === 0 || p.period === parsed[i - 1].period + 1);
+    if (!isContiguous) return parsed.map(p => p.raw).join(', ');
+
+    const first = parsed[0];
+    const last = parsed[parsed.length - 1];
+    return `Jam ke ${first.period}-${last.period} (${first.start} - ${last.end})`;
+  }, [scheduledTimeSlots]);
+
+  // Isi otomatis kolom Jam Ke- setiap kali jadwal yang cocok berubah (kelas/mapel/tanggal diganti)
+  useEffect(() => {
+    if (mergedScheduleTimeSlot && !editingEntry) {
+      setTimeSlot(mergedScheduleTimeSlot);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mergedScheduleTimeSlot]);
+
   // Attendance state: studentId -> status
   const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   
