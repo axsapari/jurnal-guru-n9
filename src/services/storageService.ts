@@ -54,10 +54,10 @@ const classToDb = (c: ClassRoom) => ({
 });
 
 const studentFromDb = (r: any): Student => ({
-  id: r.id, classId: r.class_id, nisn: r.nisn, name: r.name, gender: r.gender,
+  id: r.id, classId: r.class_id, nisn: r.nisn, name: r.name, gender: r.gender, parentPhone: r.parent_phone,
 });
 const studentToDb = (s: Student) => ({
-  id: s.id, class_id: s.classId, nisn: s.nisn, name: s.name, gender: s.gender,
+  id: s.id, class_id: s.classId, nisn: s.nisn, name: s.name, gender: s.gender, parent_phone: s.parentPhone ?? '',
 });
 
 const tpFromDb = (r: any): LearningObjective => ({
@@ -281,6 +281,11 @@ export class StorageService {
     assertOk(error, 'saveClasses');
   }
 
+  static async deleteClass(id: string): Promise<void> {
+    const { error } = await supabase.from('classes').delete().eq('id', id);
+    assertOk(error, 'deleteClass');
+  }
+
   // Students
   static async getStudents(classId?: string): Promise<Student[]> {
     let query = supabase.from('students').select('*').order('name');
@@ -489,6 +494,31 @@ export class StorageService {
       schoolConfig: school, users, classes, students, learningObjectives: tps,
       journals, reminders, gradeTypes, grades, participations, schedule,
     };
+  }
+
+  // ---------- Semester / Tahun Ajaran Aktif ----------
+  // Disimpan sebagai satu baris JSON di app_settings supaya tidak perlu
+  // tabel baru. Dipakai sebagai default semester/tahun ajaran saat mencatat
+  // nilai & keaktifan, dan sebagai filter tampilan.
+
+  static async getActivePeriod(): Promise<{ semester: string; academicYear: string }> {
+    const { data } = await supabase.from('app_settings').select('value').eq('key', 'active_period').maybeSingle();
+    if (data?.value) {
+      try {
+        return JSON.parse(data.value);
+      } catch {
+        // fall through to default
+      }
+    }
+    return { semester: 'Ganjil', academicYear: '2025/2026' };
+  }
+
+  static async setActivePeriod(semester: string, academicYear: string): Promise<void> {
+    const { error } = await supabase.from('app_settings').upsert({
+      key: 'active_period',
+      value: JSON.stringify({ semester, academicYear }),
+    });
+    assertOk(error, 'setActivePeriod');
   }
 
   static async importBackup(data: Record<string, any>): Promise<void> {

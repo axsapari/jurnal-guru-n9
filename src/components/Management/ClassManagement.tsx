@@ -9,6 +9,7 @@ import { ImportUtils } from '../../utils/importUtils';
 import { StudentProfileModal } from '../Students/StudentProfileModal';
 
 interface ClassManagementProps {
+  currentUser: User;
   classes: ClassRoom[];
   teachers: User[];
   journals: JournalEntry[];
@@ -16,25 +17,32 @@ interface ClassManagementProps {
 }
 
 export const ClassManagement: React.FC<ClassManagementProps> = ({
+  currentUser,
   classes,
   teachers,
   journals,
   onRefresh
 }) => {
+  const isAdmin = currentUser.role === 'admin';
+  // Wali kelas (guru yang jadi homeroomTeacherId kelas tsb) juga boleh kelola kelas & siswanya sendiri.
+  const canManageClass = (c: ClassRoom | undefined) => isAdmin || (!!c && c.homeroomTeacherId === currentUser.id);
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [profileStudent, setProfileStudent] = useState<Student | null>(null);
+  const [editingClassId, setEditingClassId] = useState<string | null>(null);
+  const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
 
-  // New Class Form
+  // New/Edit Class Form
   const [newClassName, setNewClassName] = useState('');
   const [newClassGrade, setNewClassGrade] = useState('7');
   const [newClassTeacher, setNewClassTeacher] = useState('');
 
-  // New Student Form
+  // New/Edit Student Form
   const [newStudentNisn, setNewStudentNisn] = useState('');
   const [newStudentName, setNewStudentName] = useState('');
   const [newStudentGender, setNewStudentGender] = useState<'L' | 'P'>('L');
+  const [newStudentParentPhone, setNewStudentParentPhone] = useState('');
 
   const activeClass = classes.find(c => c.id === selectedClassId) || classes[0];
   const [students, setStudents] = useState<Student[]>([]);
@@ -53,54 +61,124 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
     return () => { cancelled = true; };
   }, [selectedClassId]);
 
-  const handleAddClass = async (e: React.FormEvent) => {
+  const openAddClassModal = () => {
+    setEditingClassId(null);
+    setNewClassName('');
+    setNewClassGrade('7');
+    setNewClassTeacher(teachers[0]?.id || '');
+    setShowAddClassModal(true);
+  };
+
+  const openEditClassModal = (c: ClassRoom) => {
+    setEditingClassId(c.id);
+    setNewClassName(c.name);
+    setNewClassGrade(c.grade);
+    setNewClassTeacher(c.homeroomTeacherId || '');
+    setShowAddClassModal(true);
+  };
+
+  const handleSaveClass = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newClassName.trim()) return;
 
-    const newClass: ClassRoom = {
-      id: 'cls-' + Date.now(),
-      name: newClassName.trim().toUpperCase(),
-      grade: newClassGrade,
-      academicYear: '2025/2026',
-      homeroomTeacherId: newClassTeacher || teachers[0]?.id,
-      studentCount: 0
-    };
-
     const currentClasses = await StorageService.getClasses();
-    await StorageService.saveClasses([...currentClasses, newClass]);
+
+    if (editingClassId) {
+      const updated = currentClasses.map(c => c.id === editingClassId ? {
+        ...c,
+        name: newClassName.trim().toUpperCase(),
+        grade: newClassGrade,
+        homeroomTeacherId: newClassTeacher || c.homeroomTeacherId,
+      } : c);
+      await StorageService.saveClasses(updated);
+    } else {
+      const newClass: ClassRoom = {
+        id: 'cls-' + Date.now(),
+        name: newClassName.trim().toUpperCase(),
+        grade: newClassGrade,
+        academicYear: '2025/2026',
+        homeroomTeacherId: newClassTeacher || teachers[0]?.id,
+        studentCount: 0
+      };
+      await StorageService.saveClasses([...currentClasses, newClass]);
+      setSelectedClassId(newClass.id);
+    }
 
     setNewClassName('');
     setShowAddClassModal(false);
-    setSelectedClassId(newClass.id);
+    setEditingClassId(null);
     onRefresh();
   };
 
-  const handleAddStudent = async (e: React.FormEvent) => {
+  const handleDeleteClass = async (classId: string, className: string) => {
+    if (!confirm(`Hapus kelas ${className}? Semua data siswa di kelas ini juga akan ikut terhapus. Tindakan ini tidak bisa dibatalkan.`)) return;
+    await StorageService.deleteClass(classId);
+    if (selectedClassId === classId) {
+      setSelectedClassId(classes.find(c => c.id !== classId)?.id || '');
+    }
+    onRefresh();
+  };
+
+  const openAddStudentModal = () => {
+    setEditingStudentId(null);
+    setNewStudentName('');
+    setNewStudentNisn('');
+    setNewStudentGender('L');
+    setNewStudentParentPhone('');
+    setShowAddStudentModal(true);
+  };
+
+  const openEditStudentModal = (s: Student) => {
+    setEditingStudentId(s.id);
+    setNewStudentName(s.name);
+    setNewStudentNisn(s.nisn);
+    setNewStudentGender(s.gender);
+    setNewStudentParentPhone(s.parentPhone || '');
+    setShowAddStudentModal(true);
+  };
+
+  const handleSaveStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName.trim() || !selectedClassId) return;
 
-    const newStudent: Student = {
-      id: 'std-' + Date.now(),
-      classId: selectedClassId,
-      nisn: newStudentNisn.trim() || `00${Math.floor(Math.random() * 899999 + 100000)}`,
-      name: newStudentName.trim(),
-      gender: newStudentGender
-    };
+    if (editingStudentId) {
+      const updated: Student = {
+        id: editingStudentId,
+        classId: selectedClassId,
+        nisn: newStudentNisn.trim(),
+        name: newStudentName.trim(),
+        gender: newStudentGender,
+        parentPhone: newStudentParentPhone.trim(),
+      };
+      await StorageService.saveStudents([updated]);
+      setStudents(prev => prev.map(s => s.id === editingStudentId ? updated : s));
+    } else {
+      const newStudent: Student = {
+        id: 'std-' + Date.now(),
+        classId: selectedClassId,
+        nisn: newStudentNisn.trim() || `00${Math.floor(Math.random() * 899999 + 100000)}`,
+        name: newStudentName.trim(),
+        gender: newStudentGender,
+        parentPhone: newStudentParentPhone.trim(),
+      };
 
-    await StorageService.addStudent(newStudent);
+      await StorageService.addStudent(newStudent);
 
-    // Update class student count
-    const updatedClasses = classes.map(c => {
-      if (c.id === selectedClassId) {
-        return { ...c, studentCount: (c.studentCount || 0) + 1 };
-      }
-      return c;
-    });
-    await StorageService.saveClasses(updatedClasses);
+      // Update class student count
+      const updatedClasses = classes.map(c => {
+        if (c.id === selectedClassId) {
+          return { ...c, studentCount: (c.studentCount || 0) + 1 };
+        }
+        return c;
+      });
+      await StorageService.saveClasses(updatedClasses);
+    }
 
     setNewStudentName('');
     setNewStudentNisn('');
+    setNewStudentParentPhone('');
     setShowAddStudentModal(false);
+    setEditingStudentId(null);
     onRefresh();
   };
 
@@ -167,13 +245,15 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={() => setShowAddClassModal(true)}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-        >
-          <Plus size={16} />
-          <span>+ Tambah Kelas Baru</span>
-        </button>
+        {isAdmin && (
+          <button
+            onClick={openAddClassModal}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+          >
+            <Plus size={16} />
+            <span>+ Tambah Kelas Baru</span>
+          </button>
+        )}
       </div>
 
       {/* Class List Tabs & Student Detail Layout */}
@@ -189,23 +269,43 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
               const isSelected = c.id === selectedClassId;
               const homeroom = teachers.find(t => t.id === c.homeroomTeacherId);
               return (
-                <button
+                <div
                   key={c.id}
-                  onClick={() => setSelectedClassId(c.id)}
-                  className={`w-full text-left p-3 rounded-xl transition cursor-pointer flex items-center justify-between ${
+                  className={`w-full text-left p-3 rounded-xl transition flex items-center justify-between gap-1 ${
                     isSelected 
                       ? 'bg-indigo-600 text-white font-bold shadow-md' 
-                      : 'bg-slate-50 hover:bg-slate-100 text-slate-800'
+                      : 'bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
                   }`}
                 >
-                  <div>
+                  <button onClick={() => setSelectedClassId(c.id)} className="flex-1 min-w-0 text-left cursor-pointer">
                     <p className="text-sm">Kelas {c.name}</p>
-                    <p className={`text-[11px] ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>
+                    <p className={`text-[11px] truncate ${isSelected ? 'text-indigo-200' : 'text-slate-500 dark:text-slate-400'}`}>
                       Tingkat {c.grade} • Wali: {homeroom?.name.split(',')[0] || 'Guru'}
                     </p>
-                  </div>
-                  <ChevronRight size={16} className={isSelected ? 'text-white' : 'text-slate-400'} />
-                </button>
+                  </button>
+                  {canManageClass(c) ? (
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button
+                        onClick={() => openEditClassModal(c)}
+                        title="Edit kelas"
+                        className={`p-1 rounded cursor-pointer ${isSelected ? 'text-indigo-100 hover:text-white' : 'text-slate-400 hover:text-indigo-600 dark:text-slate-500'}`}
+                      >
+                        <Edit3 size={13} />
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handleDeleteClass(c.id, c.name)}
+                          title="Hapus kelas"
+                          className={`p-1 rounded cursor-pointer ${isSelected ? 'text-indigo-100 hover:text-white' : 'text-slate-400 hover:text-rose-600 dark:text-slate-500'}`}
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <ChevronRight size={16} className={isSelected ? 'text-white' : 'text-slate-400'} />
+                  )}
+                </div>
               );
             })}
           </div>
@@ -227,34 +327,40 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => ImportUtils.downloadStudentTemplate()}
-                className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-800/60"
-                title="Download template Excel untuk diisi lalu diimpor"
-              >
-                <FileDown size={15} />
-                <span>Template</span>
-              </button>
+              {canManageClass(activeClass) && (
+                <>
+                  <button
+                    onClick={() => ImportUtils.downloadStudentTemplate()}
+                    className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-600 border border-slate-300 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700 dark:text-slate-500 dark:hover:bg-slate-800/60"
+                    title="Download template Excel untuk diisi lalu diimpor"
+                  >
+                    <FileDown size={15} />
+                    <span>Template</span>
+                  </button>
 
-              <label className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
-                <UploadCloud size={15} />
-                <span>{isImportingStudents ? 'Mengimpor...' : 'Impor Siswa'}</span>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  className="hidden"
-                  disabled={isImportingStudents || !selectedClassId}
-                  onChange={e => handleImportStudents(e.target.files?.[0] || null)}
-                />
-              </label>
+                  <label className="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5">
+                    <UploadCloud size={15} />
+                    <span>{isImportingStudents ? 'Mengimpor...' : 'Impor Siswa'}</span>
+                    <input
+                      type="file"
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                      disabled={isImportingStudents || !selectedClassId}
+                      onChange={e => handleImportStudents(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                </>
+              )}
 
-              <button
-                onClick={() => setShowAddStudentModal(true)}
-                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
-              >
-                <UserPlus size={15} />
-                <span>+ Tambah Member Siswa</span>
-              </button>
+              {canManageClass(activeClass) && (
+                <button
+                  onClick={openAddStudentModal}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer flex items-center gap-1.5"
+                >
+                  <UserPlus size={15} />
+                  <span>+ Tambah Member Siswa</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -313,12 +419,24 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                         >
                           <UserRound size={15} />
                         </button>
-                        <button
-                          onClick={() => handleDeleteStudent(std.id)}
-                          className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {canManageClass(activeClass) && (
+                          <>
+                            <button
+                              onClick={() => openEditStudentModal(std)}
+                              className="p-1 text-slate-400 hover:text-indigo-600 transition cursor-pointer dark:text-slate-500 mr-1"
+                              title="Edit data siswa"
+                            >
+                              <Edit3 size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteStudent(std.id)}
+                              className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
+                              title="Hapus siswa"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -329,18 +447,18 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
         </div>
       </div>
 
-      {/* Add Class Modal */}
+      {/* Add/Edit Class Modal */}
       {showAddClassModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4 dark:bg-slate-900 dark:border-slate-800">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-              <h3 className="font-bold text-slate-900 text-base dark:text-white">Tambah Kelas Baru</h3>
-              <button onClick={() => setShowAddClassModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
+              <h3 className="font-bold text-slate-900 text-base dark:text-white">{editingClassId ? 'Edit Kelas' : 'Tambah Kelas Baru'}</h3>
+              <button onClick={() => { setShowAddClassModal(false); setEditingClassId(null); }} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddClass} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveClass} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Nama Kelas</label>
                 <input
@@ -385,7 +503,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddClassModal(false)}
+                  onClick={() => { setShowAddClassModal(false); setEditingClassId(null); }}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer dark:bg-slate-800 dark:text-slate-300"
                 >
                   Batal
@@ -394,7 +512,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   type="submit"
                   className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs cursor-pointer"
                 >
-                  Simpan Kelas
+                  {editingClassId ? 'Simpan Perubahan' : 'Simpan Kelas'}
                 </button>
               </div>
             </form>
@@ -402,18 +520,20 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
         </div>
       )}
 
-      {/* Add Student Modal */}
+      {/* Add/Edit Student Modal */}
       {showAddStudentModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 shadow-2xl border border-slate-100 w-full max-w-md space-y-4 dark:bg-slate-900 dark:border-slate-800">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
-              <h3 className="font-bold text-slate-900 text-base dark:text-white">Tambah Member Siswa Ke Kelas {activeClass?.name}</h3>
-              <button onClick={() => setShowAddStudentModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
+              <h3 className="font-bold text-slate-900 text-base dark:text-white">
+                {editingStudentId ? 'Edit Data Siswa' : `Tambah Member Siswa Ke Kelas ${activeClass?.name}`}
+              </h3>
+              <button onClick={() => { setShowAddStudentModal(false); setEditingStudentId(null); }} className="text-slate-400 hover:text-slate-600 cursor-pointer dark:text-slate-400 dark:text-slate-500">
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleAddStudent} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveStudent} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1 dark:text-slate-300">Nama Lengkap Siswa</label>
                 <input
@@ -464,7 +584,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setShowAddStudentModal(false)}
+                  onClick={() => { setShowAddStudentModal(false); setEditingStudentId(null); }}
                   className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold cursor-pointer dark:bg-slate-800 dark:text-slate-300"
                 >
                   Batal
@@ -473,7 +593,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   type="submit"
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs cursor-pointer"
                 >
-                  Tambah Siswa
+                  {editingStudentId ? 'Simpan Perubahan' : 'Tambah Siswa'}
                 </button>
               </div>
             </form>

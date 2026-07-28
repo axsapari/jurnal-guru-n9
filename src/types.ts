@@ -47,6 +47,7 @@ export interface Student {
   nisn: string;
   name: string;
   gender: 'L' | 'P';
+  parentPhone?: string; // nomor WhatsApp orang tua/wali, untuk notifikasi ketidakhadiran
 }
 
 export interface LearningObjective {

@@ -55,7 +55,8 @@ create table if not exists students (
   class_id text references classes(id) on delete cascade,
   nisn text default '',
   name text not null,
-  gender text check (gender in ('L', 'P'))
+  gender text check (gender in ('L', 'P')),
+  parent_phone text default ''
 );
 
 -- 5. Tujuan Pembelajaran (TP)

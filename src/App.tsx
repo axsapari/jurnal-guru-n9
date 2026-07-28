@@ -218,6 +218,7 @@ export default function App() {
         {/* TAB 5: Kelas & Siswa */}
         {activeTab === 'classes' && (
           <ClassManagement
+            currentUser={currentUser}
             classes={classes}
             teachers={users}
             journals={journals}
