@@ -8,13 +8,15 @@ import * as XLSX from 'xlsx';
 interface ParticipationManagementProps {
   currentUser: User;
   classes: ClassRoom[];
+  activePeriod: { semester: string; academicYear: string };
 }
 
-const DEFAULT_SEMESTER = 'Ganjil';
-const DEFAULT_ACADEMIC_YEAR = '2025/2026';
 const SCORE_OPTIONS = [30, 50, 80, 100];
 
-export const ParticipationManagement: React.FC<ParticipationManagementProps> = ({ currentUser, classes }) => {
+export const ParticipationManagement: React.FC<ParticipationManagementProps> = ({ currentUser, classes, activePeriod }) => {
+  const DEFAULT_SEMESTER = activePeriod.semester;
+  const DEFAULT_ACADEMIC_YEAR = activePeriod.academicYear;
+
   const scopedClasses = (currentUser.role === 'admin' || !currentUser.classIds || currentUser.classIds.length === 0)
     ? classes
     : classes.filter(c => currentUser.classIds!.includes(c.id));
@@ -32,8 +34,10 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
   useEffect(() => {
     if (!classId) return;
     StorageService.getStudents(classId).then(setStudents);
-    StorageService.getParticipations().then(setAllParticipations);
-  }, [classId]);
+    StorageService.getParticipations().then(list =>
+      setAllParticipations(list.filter(p => p.semester === DEFAULT_SEMESTER && p.academicYear === DEFAULT_ACADEMIC_YEAR))
+    );
+  }, [classId, DEFAULT_SEMESTER, DEFAULT_ACADEMIC_YEAR]);
 
   useEffect(() => {
     // Pre-fill scores for this date from existing data, default 80 for new entries
@@ -71,7 +75,8 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
       });
       await StorageService.saveParticipations(rows);
       setFeedback(`Keaktifan ${rows.length} siswa untuk tanggal ${date} berhasil disimpan.`);
-      setAllParticipations(await StorageService.getParticipations());
+      const allList = await StorageService.getParticipations();
+      setAllParticipations(allList.filter(p => p.semester === DEFAULT_SEMESTER && p.academicYear === DEFAULT_ACADEMIC_YEAR));
       setShowSuccess(true);
       setTimeout(() => setFeedback(null), 3000);
     } finally {
@@ -104,6 +109,9 @@ export const ParticipationManagement: React.FC<ParticipationManagementProps> = (
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Sparkles size={20} className="text-indigo-600 dark:text-indigo-400" />
           <span>Keaktifan Siswa</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
+            {DEFAULT_SEMESTER} {DEFAULT_ACADEMIC_YEAR}
+          </span>
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 -mt-2">Catat skor partisipasi/keaktifan siswa per pertemuan (0-100), terpisah dari nilai akademik.</p>
 

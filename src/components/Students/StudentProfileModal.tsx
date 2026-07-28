@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X, User as UserIcon, CheckCircle2, GraduationCap, Sparkles, AlertTriangle } from 'lucide-react';
 import { Student, JournalEntry, Grade, Participation, IncidentRecord } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface StudentProfileModalProps {
   student: Student | null;
@@ -67,6 +68,8 @@ export const StudentProfileModal: React.FC<StudentProfileModalProps> = ({ studen
       count: list.length,
     }));
   }, [grades]);
+
+  useEscapeKey(!!student, onClose);
 
   if (!student) return null;
 

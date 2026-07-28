@@ -3,6 +3,7 @@ import { Target, Plus, Trash2, Search, BookOpen, FileDown, UploadCloud } from 'l
 import { LearningObjective, User } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ImportUtils } from '../../utils/importUtils';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 import { SUBJECTS } from '../../data/subjects';
 
 interface TpManagementProps {
@@ -32,6 +33,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
   
   // New TP Modal
   const [showAddModal, setShowAddModal] = useState(false);
+  useEscapeKey(showAddModal, () => setShowAddModal(false));
   const [subject, setSubject] = useState(subjectOptions[0] || 'Matematika');
   const [grade, setGrade] = useState('7');
   const [code, setCode] = useState('');
@@ -248,7 +250,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                     value={subject}
                     onChange={e => setSubject(e.target.value)}
                     required
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                   >
                     {subjectOptions.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -259,7 +261,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
                   <select
                     value={grade}
                     onChange={e => setGrade(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                   >
                     <option value="7">Kelas 7</option>
                     <option value="8">Kelas 8</option>

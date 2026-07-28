@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DatabaseBackup, Download, Upload, AlertTriangle, CheckCircle2, X } from 'lucide-react';
 import { StorageService } from '../../services/storageService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface BackupRestoreModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ export const BackupRestoreModal: React.FC<BackupRestoreModalProps> = ({ isOpen, 
   const [isRestoring, setIsRestoring] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 

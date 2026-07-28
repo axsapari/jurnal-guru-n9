@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { Building2, X, Check, Upload, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { SchoolConfig } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface SchoolSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   schoolConfig: SchoolConfig;
+  activePeriod: { semester: string; academicYear: string };
   onSaved: () => void;
 }
 
@@ -14,6 +16,7 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
   isOpen,
   onClose,
   schoolConfig,
+  activePeriod,
   onSaved
 }) => {
   const [formData, setFormData] = useState<SchoolConfig>({ ...schoolConfig });
@@ -21,6 +24,26 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
 
   const [uploadingLogo, setUploadingLogo] = useState<'school' | 'city' | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [periodSemester, setPeriodSemester] = useState(activePeriod.semester);
+  const [periodYear, setPeriodYear] = useState(activePeriod.academicYear);
+  const [isSavingPeriod, setIsSavingPeriod] = useState(false);
+  const [periodSaved, setPeriodSaved] = useState(false);
+
+  const handleSavePeriod = async () => {
+    if (!periodYear.trim()) return;
+    setIsSavingPeriod(true);
+    try {
+      await StorageService.setActivePeriod(periodSemester, periodYear.trim());
+      setPeriodSaved(true);
+      onSaved();
+      setTimeout(() => setPeriodSaved(false), 2500);
+    } finally {
+      setIsSavingPeriod(false);
+    }
+  };
+
+  useEscapeKey(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -71,6 +94,55 @@ export const SchoolSettingsModal: React.FC<SchoolSettingsModalProps> = ({
         </div>
 
         {/* Body Form */}
+        <div className="px-6 pt-5">
+          <div className="p-4 bg-amber-50 dark:bg-amber-950/30 rounded-2xl border border-amber-200 dark:border-amber-800 space-y-3">
+            <h4 className="font-bold text-amber-900 dark:text-amber-300 text-xs flex items-center gap-1.5">
+              <Sparkles size={14} /> Semester & Tahun Ajaran Aktif
+            </h4>
+            <p className="text-[11px] text-amber-800 dark:text-amber-400">
+              Menentukan periode default saat mencatat nilai & keaktifan baru. Data periode lama tetap tersimpan aman, tidak terhapus saat kamu ganti ini.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-[10px] font-bold text-amber-800 dark:text-amber-400 mb-1">Semester</label>
+                <select
+                  value={periodSemester}
+                  onChange={e => setPeriodSemester(e.target.value)}
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
+                >
+                  <option value="Ganjil">Ganjil</option>
+                  <option value="Genap">Genap</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-amber-800 dark:text-amber-400 mb-1">Tahun Ajaran</label>
+                <input
+                  type="text"
+                  value={periodYear}
+                  onChange={e => setPeriodYear(e.target.value)}
+                  placeholder="2026/2027"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-800 rounded-xl text-xs font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSavePeriod}
+                disabled={isSavingPeriod}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs shadow-xs transition cursor-pointer"
+              >
+                {isSavingPeriod ? 'Menyimpan...' : 'Aktifkan Periode Ini'}
+              </button>
+              {periodSaved && (
+                <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                  <Check size={13} /> Tersimpan
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 text-xs text-slate-800 dark:text-slate-200">
           
           {successToast && (

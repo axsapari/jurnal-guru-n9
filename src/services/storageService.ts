@@ -510,7 +510,7 @@ export class StorageService {
         // fall through to default
       }
     }
-    return { semester: 'Ganjil', academicYear: '2025/2026' };
+    return { semester: 'Ganjil', academicYear: '2026/2027' };
   }
 
   static async setActivePeriod(semester: string, academicYear: string): Promise<void> {

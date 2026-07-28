@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { JournalEntry, ClassRoom, User, AttendanceStatus } from '../../types';
 import { StorageService } from '../../services/storageService';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface JournalListProps {
   journals: JournalEntry[];
@@ -27,6 +28,7 @@ export const JournalList: React.FC<JournalListProps> = ({
   const [selectedClass, setSelectedClass] = useState('ALL');
   const [selectedTeacher, setSelectedTeacher] = useState('ALL');
   const [viewingJournal, setViewingJournal] = useState<JournalEntry | null>(null);
+  useEscapeKey(!!viewingJournal, () => setViewingJournal(null));
 
   // Guru hanya melihat jurnalnya sendiri; admin melihat semua.
   const scopedJournals = currentUser.role === 'admin' ? journals : journals.filter(j => j.teacherId === currentUser.id);

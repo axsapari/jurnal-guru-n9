@@ -10,6 +10,7 @@ import {
 import { StorageService } from '../../services/storageService';
 import { SUBJECTS } from '../../data/subjects';
 import { SuccessPopup, SavingSpinner } from '../SuccessPopup';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface JournalFormModalProps {
   isOpen: boolean;
@@ -239,6 +240,8 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
       setIsSubmitting(false);
     }
   };
+
+  useEscapeKey(isOpen && !isSubmitting, onClose);
 
   if (!isOpen) return null;
 

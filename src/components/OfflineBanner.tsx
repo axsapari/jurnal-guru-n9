@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, CloudOff } from 'lucide-react';
 import { StorageService } from '../services/storageService';
 
 interface OfflineBannerProps {
   onSyncComplete?: () => void;
+  connectionError?: string | null;
+  usingCache?: boolean;
 }
 
-export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) => {
+export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete, connectionError, usingCache }) => {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [pendingCount, setPendingCount] = useState<number>(0);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<boolean>(false);
 
   const updateStatus = () => {
     setIsOnline(navigator.onLine);
@@ -22,8 +25,8 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) 
 
     const handleOnline = () => {
       setIsOnline(true);
-      // Auto-trigger sync on reconnect
       handleSync();
+      if (onSyncComplete) onSyncComplete(); // also retry loading fresh data from Supabase
     };
 
     const handleOffline = () => {
@@ -34,7 +37,6 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Refresh count periodically
     const interval = setInterval(updateStatus, 3000);
 
     return () => {
@@ -42,6 +44,7 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) 
       window.removeEventListener('offline', handleOffline);
       clearInterval(interval);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSync = async () => {
@@ -66,51 +69,68 @@ export const OfflineBanner: React.FC<OfflineBannerProps> = ({ onSyncComplete }) 
     }
   };
 
+  const hasIssue = !isOnline || !!connectionError || pendingCount > 0;
+
+  // Nothing to report and nothing pending -> stay fully out of the way.
+  if (!hasIssue && !syncMessage) return null;
+
   return (
-    <div className="w-full bg-slate-900 text-white border-b border-slate-800 text-xs py-2 px-4 shadow-sm print:hidden">
-      <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
-        {/* Connection status badge */}
-        <div className="flex items-center gap-2">
-          {isOnline ? (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 font-medium border border-emerald-800/50">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <Wifi size={13} /> Status: Terhubung Online
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 font-medium border border-amber-800/50">
-              <WifiOff size={13} /> Mode Offline (Tersimpan Lokal)
-            </span>
-          )}
+    <div className="fixed top-3 left-3 z-[60] print:hidden max-w-xs">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[11px] font-semibold shadow-md border cursor-pointer transition ${
+          !isOnline || connectionError
+            ? 'bg-amber-50 dark:bg-amber-950/90 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+            : pendingCount > 0
+            ? 'bg-orange-50 dark:bg-orange-950/90 text-orange-800 dark:text-orange-300 border-orange-200 dark:border-orange-800'
+            : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+        }`}
+      >
+        {!isOnline ? (
+          <><WifiOff size={13} /> <span>Offline</span></>
+        ) : connectionError ? (
+          <><CloudOff size={13} /> <span>Gagal sinkron</span></>
+        ) : pendingCount > 0 ? (
+          <><AlertTriangle size={13} /> <span>{pendingCount} belum tersinkron</span></>
+        ) : (
+          <><Wifi size={13} /> <span>Online</span></>
+        )}
+      </button>
 
+      {expanded && (
+        <div className="mt-1.5 p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg text-xs space-y-2">
+          {!isOnline && (
+            <p className="text-slate-600 dark:text-slate-300">
+              Perangkat kamu sedang offline. Aplikasi tetap bisa dipakai — jurnal yang disimpan akan otomatis tersinkron begitu koneksi kembali.
+            </p>
+          )}
+          {isOnline && connectionError && (
+            <p className="text-slate-600 dark:text-slate-300">
+              Gagal terhubung ke server{usingCache ? ', menampilkan data terakhir yang tersimpan di perangkat ini' : ''}. Coba muat ulang halaman kalau masalah berlanjut.
+            </p>
+          )}
           {pendingCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-900/60 text-orange-200 border border-orange-700/50">
-              <AlertTriangle size={13} className="text-orange-400" />
-              {pendingCount} Jurnal Menunggu Sinkronisasi
-            </span>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-600 dark:text-slate-300">{pendingCount} jurnal menunggu disinkronkan.</span>
+              {isOnline && (
+                <button
+                  onClick={handleSync}
+                  disabled={isSyncing}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 text-white font-medium transition cursor-pointer disabled:opacity-50 shrink-0"
+                >
+                  <RefreshCw size={11} className={isSyncing ? 'animate-spin' : ''} />
+                  {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan'}
+                </button>
+              )}
+            </div>
           )}
-
           {syncMessage && (
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-slate-300 bg-slate-800 rounded">
-              <CheckCircle2 size={13} className="text-emerald-400" />
-              {syncMessage}
-            </span>
+            <p className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle2 size={13} /> {syncMessage}
+            </p>
           )}
         </div>
-
-        {/* Action Controls */}
-        <div className="flex items-center gap-3">
-          {pendingCount > 0 && isOnline && (
-            <button
-              onClick={handleSync}
-              disabled={isSyncing}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium transition cursor-pointer shadow-xs disabled:opacity-50"
-            >
-              <RefreshCw size={13} className={isSyncing ? 'animate-spin' : ''} />
-              {isSyncing ? 'Menyinkronkan...' : 'Sinkronkan Sekarang'}
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { UserCheck, Plus, Trash2, Edit, Phone, Mail, X, KeyRound, Check, Upload 
 import { User, ClassRoom } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { SUBJECTS } from '../../data/subjects';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface TeacherManagementProps {
   users: User[];
@@ -26,6 +27,7 @@ const emptyForm = {
 
 export const TeacherManagement: React.FC<TeacherManagementProps> = ({ users, classes, onRefresh }) => {
   const [showModal, setShowModal] = useState(false);
+  useEscapeKey(showModal, () => setShowModal(false));
   const [form, setForm] = useState(emptyForm);
   const [resetFeedback, setResetFeedback] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);

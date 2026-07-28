@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { StorageService } from './services/storageService';
-import { User, SchoolConfig, ClassRoom, LearningObjective, JournalEntry } from './types';
+import { User, SchoolConfig, ClassRoom, LearningObjective, JournalEntry, Student } from './types';
 
 // Components
 import { Header } from './components/Header';
@@ -22,9 +22,30 @@ import { BackupRestoreModal } from './components/Management/BackupRestoreModal';
 import { ReminderCenterModal } from './components/Reminders/ReminderCenterModal';
 import { SchoolSettingsModal } from './components/Management/SchoolSettingsModal';
 
+const CACHE_KEY = 'jurnal_offline_cache_v1';
+
+function saveCache(payload: object) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ ...payload, cachedAt: new Date().toISOString() }));
+  } catch {
+    // localStorage full or unavailable — non-critical, just skip caching silently
+  }
+}
+
+function loadCache(): any | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [fatalError, setFatalError] = useState<string | null>(null); // only when there's truly nothing to show
+  const [connectionError, setConnectionError] = useState<string | null>(null); // non-blocking, shown as a corner badge
+  const [usingCache, setUsingCache] = useState<boolean>(false);
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [schoolConfig, setSchoolConfig] = useState<SchoolConfig | null>(null);
@@ -32,6 +53,8 @@ export default function App() {
   const [classes, setClasses] = useState<ClassRoom[]>([]);
   const [learningObjectives, setLearningObjectives] = useState<LearningObjective[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [activePeriod, setActivePeriod] = useState<{ semester: string; academicYear: string }>({ semester: 'Ganjil', academicYear: '2026/2027' });
 
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
@@ -42,28 +65,60 @@ export default function App() {
 
   const refreshState = async (activeUserId?: string) => {
     try {
-      const [school, journalList, classList, tpList, userList] = await Promise.all([
+      const [school, journalList, classList, tpList, userList, period, studentList] = await Promise.all([
         StorageService.getSchoolConfig(),
         StorageService.getJournals(),
         StorageService.getClasses(),
         StorageService.getLearningObjectives(),
         StorageService.getUsers(),
+        StorageService.getActivePeriod(),
+        StorageService.getStudents(),
       ]);
       setSchoolConfig(school);
       setJournals(journalList);
       setClasses(classList);
       setLearningObjectives(tpList);
       setUsers(userList);
+      setActivePeriod(period);
+      setAllStudents(studentList);
+      setUsingCache(false);
+      saveCache({ schoolConfig: school, journals: journalList, classes: classList, learningObjectives: tpList, users: userList, activePeriod: period, allStudents: studentList });
 
       const sessionId = activeUserId || StorageService.getSession();
       if (sessionId) {
         const match = userList.find(u => u.id === sessionId);
         if (match) setCurrentUser(match);
       }
-      setLoadError(null);
+      setConnectionError(null);
+      setFatalError(null);
     } catch (err: any) {
       console.error('Gagal memuat data dari Supabase:', err);
-      setLoadError(err?.message || 'Gagal terhubung ke database. Periksa konfigurasi Supabase (.env).');
+      const message = err?.message || 'Gagal terhubung ke database.';
+
+      // Don't block the whole app — fall back to the last cached data if we
+      // have any, and just show a small non-blocking status badge instead.
+      const cache = loadCache();
+      if (cache) {
+        setSchoolConfig(cache.schoolConfig ?? null);
+        setJournals(cache.journals ?? []);
+        setClasses(cache.classes ?? []);
+        setLearningObjectives(cache.learningObjectives ?? []);
+        setUsers(cache.users ?? []);
+        if (cache.activePeriod) setActivePeriod(cache.activePeriod);
+        setAllStudents(cache.allStudents ?? []);
+        setUsingCache(true);
+
+        const sessionId = activeUserId || StorageService.getSession();
+        if (sessionId) {
+          const match = (cache.users ?? []).find((u: User) => u.id === sessionId);
+          if (match) setCurrentUser(match);
+        }
+        setConnectionError(message);
+        setFatalError(null);
+      } else {
+        // No cache and no connection — genuinely nothing we can show.
+        setFatalError(message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -82,12 +137,13 @@ export default function App() {
     );
   }
 
-  if (loadError) {
+  if (fatalError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-100/70 dark:bg-slate-950 p-6">
         <div className="max-w-md text-center text-red-600 dark:text-red-400">
           <p className="font-semibold mb-2">Tidak bisa terhubung ke database</p>
-          <p className="text-sm">{loadError}</p>
+          <p className="text-sm">{fatalError}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-500 mt-3">Belum ada data tersimpan di perangkat ini untuk ditampilkan sementara. Periksa koneksi internet, lalu muat ulang halaman.</p>
         </div>
       </div>
     );
@@ -129,6 +185,8 @@ export default function App() {
       {/* Network & Offline Status Banner */}
       <OfflineBanner
         onSyncComplete={refreshState}
+        connectionError={connectionError}
+        usingCache={usingCache}
       />
 
       {/* Main Navigation Header */}
@@ -162,6 +220,7 @@ export default function App() {
               journals={journals}
               teachers={users}
               classes={classes}
+              students={allStudents}
               onOpenJournalForm={() => setShowJournalModal(true)}
               onSendReminder={(teacher) => {
                 setActiveTab('reminders');
@@ -201,6 +260,7 @@ export default function App() {
             currentUser={currentUser}
             classes={classes}
             learningObjectives={learningObjectives}
+            activePeriod={activePeriod}
           />
         )}
 
@@ -240,6 +300,7 @@ export default function App() {
           <ParticipationManagement
             currentUser={currentUser}
             classes={classes}
+            activePeriod={activePeriod}
           />
         )}
 
@@ -285,6 +346,7 @@ export default function App() {
         isOpen={showSchoolSettingsModal}
         onClose={() => setShowSchoolSettingsModal(false)}
         schoolConfig={schoolConfig!}
+        activePeriod={activePeriod}
         onSaved={refreshState}
       />
 

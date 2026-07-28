@@ -9,14 +9,15 @@ interface GradesManagementProps {
   currentUser: User;
   classes: ClassRoom[];
   learningObjectives: LearningObjective[];
+  activePeriod: { semester: string; academicYear: string };
 }
-
-const DEFAULT_SEMESTER = 'Ganjil';
-const DEFAULT_ACADEMIC_YEAR = '2025/2026';
 
 type Tab = 'input' | 'weights' | 'recap';
 
-export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser, classes, learningObjectives }) => {
+export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser, classes, learningObjectives, activePeriod }) => {
+  const DEFAULT_SEMESTER = activePeriod.semester;
+  const DEFAULT_ACADEMIC_YEAR = activePeriod.academicYear;
+
   const teacherSubjects = currentUser.role === 'admin'
     ? (currentUser.subjects && currentUser.subjects.length > 0 ? currentUser.subjects : ['Umum'])
     : (currentUser.subjects && currentUser.subjects.length > 0 ? currentUser.subjects : (currentUser.subject ? [currentUser.subject] : ['Umum']));
@@ -57,12 +58,12 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
       StorageService.getGrades(),
     ]);
     setStudents(studentList);
-    setGradeTypes(allGradeTypes.filter(g => g.classId === classId && g.subject === subject));
-    setGrades(allGrades.filter(g => g.classId === classId && g.subject === subject));
+    setGradeTypes(allGradeTypes.filter(g => g.classId === classId && g.subject === subject && g.semester === DEFAULT_SEMESTER && g.academicYear === DEFAULT_ACADEMIC_YEAR));
+    setGrades(allGrades.filter(g => g.classId === classId && g.subject === subject && g.semester === DEFAULT_SEMESTER && g.academicYear === DEFAULT_ACADEMIC_YEAR));
     setLoading(false);
   };
 
-  useEffect(() => { loadClassData(); }, [classId, subject]);
+  useEffect(() => { loadClassData(); }, [classId, subject, activePeriod.semester, activePeriod.academicYear]);
 
   useEffect(() => {
     // Pre-fill score inputs from existing grades when assessment selection changes
@@ -199,6 +200,9 @@ export const GradesManagement: React.FC<GradesManagementProps> = ({ currentUser,
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <GraduationCap size={20} className="text-indigo-600 dark:text-indigo-400" />
           <span>Nilai / Penilaian</span>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">
+            {DEFAULT_SEMESTER} {DEFAULT_ACADEMIC_YEAR}
+          </span>
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 dark:text-slate-500">
           Catat nilai tugas/ulangan, atur bobot penilaian, dan lihat rekap nilai akhir per kelas.

@@ -7,6 +7,7 @@ import { ClassRoom, Student, User, JournalEntry } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ImportUtils } from '../../utils/importUtils';
 import { StudentProfileModal } from '../Students/StudentProfileModal';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface ClassManagementProps {
   currentUser: User;
@@ -29,6 +30,8 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
   const [selectedClassId, setSelectedClassId] = useState<string>(classes[0]?.id || '');
   const [showAddClassModal, setShowAddClassModal] = useState(false);
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  useEscapeKey(showAddClassModal, () => { setShowAddClassModal(false); setEditingClassId(null); });
+  useEscapeKey(showAddStudentModal, () => { setShowAddStudentModal(false); setEditingStudentId(null); });
   const [profileStudent, setProfileStudent] = useState<Student | null>(null);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   const [editingStudentId, setEditingStudentId] = useState<string | null>(null);
@@ -467,7 +470,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   value={newClassName}
                   onChange={e => setNewClassName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 />
               </div>
 
@@ -476,7 +479,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <select
                   value={newClassGrade}
                   onChange={e => setNewClassGrade(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 dark:text-white dark:border-slate-700"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 >
                   <option value="7">Kelas 7</option>
                   <option value="8">Kelas 8</option>
@@ -492,7 +495,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                 <select
                   value={newClassTeacher}
                   onChange={e => setNewClassTeacher(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 dark:text-white dark:border-slate-700"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-semibold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 >
                   {teachers.map(t => (
                     <option key={t.id} value={t.id}>{t.name}</option>
@@ -542,7 +545,7 @@ export const ClassManagement: React.FC<ClassManagementProps> = ({
                   value={newStudentName}
                   onChange={e => setNewStudentName(e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 dark:text-white dark:border-slate-700"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-xl font-bold text-slate-900 bg-white dark:bg-slate-800 dark:text-white dark:border-slate-700"
                 />
               </div>
 

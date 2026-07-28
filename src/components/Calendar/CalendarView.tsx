@@ -3,6 +3,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, FileDown, UploadCloud, X, Cloc
 import { User, ClassRoom, JournalEntry, ScheduleEntry } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ImportUtils } from '../../utils/importUtils';
+import { useEscapeKey } from '../../hooks/useEscapeKey';
 
 interface CalendarViewProps {
   currentUser: User;
@@ -22,6 +23,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ currentUser, classes
   const [viewYear, setViewYear] = useState(today.getFullYear());
   const [viewMonth, setViewMonth] = useState(today.getMonth()); // 0-indexed
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  useEscapeKey(!!selectedDate, () => setSelectedDate(null));
   const [schedule, setSchedule] = useState<ScheduleEntry[]>([]);
   const [isImporting, setIsImporting] = useState(false);
   const [importFeedback, setImportFeedback] = useState<{ type: 'success' | 'error'; summary: string; details: string[] } | null>(null);

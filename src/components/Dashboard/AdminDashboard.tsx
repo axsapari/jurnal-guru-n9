@@ -1,14 +1,15 @@
 import React from 'react';
 import { 
   Users, BookOpen, CheckCircle, Clock, AlertCircle, Send, 
-  FileText, TrendingUp, Camera, Award, ArrowUpRight, ShieldCheck, HeartPulse
+  FileText, TrendingUp, Camera, Award, ArrowUpRight, ShieldCheck, HeartPulse, AlertTriangle, CalendarX
 } from 'lucide-react';
-import { JournalEntry, User, ClassRoom } from '../../types';
+import { JournalEntry, User, ClassRoom, Student } from '../../types';
 
 interface AdminDashboardProps {
   journals: JournalEntry[];
   teachers: User[];
   classes: ClassRoom[];
+  students: Student[];
   onOpenJournalForm: () => void;
   onSendReminder: (teacher: User) => void;
   onViewJournalDetails: (entry: JournalEntry) => void;
@@ -18,6 +19,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   journals,
   teachers,
   classes,
+  students,
   onOpenJournalForm,
   onSendReminder,
   onViewJournalDetails
@@ -54,6 +56,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const attendanceRate = totalSiswaLogged > 0 
     ? Math.round((totalHadir / totalSiswaLogged) * 100) 
     : 100;
+
+  // ---------- Analitik: Tren Kehadiran 14 Hari Terakhir ----------
+  const last14Days = Array.from({ length: 14 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (13 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const attendanceTrend = last14Days.map(date => {
+    const dayJournals = journals.filter(j => j.date === date);
+    const hadir = dayJournals.reduce((a, j) => a + j.attendanceSummary.hadir, 0);
+    const total = dayJournals.reduce((a, j) => a + j.attendanceSummary.total, 0);
+    return { date, rate: total > 0 ? Math.round((hadir / total) * 100) : null };
+  });
+
+  // ---------- Analitik: Siswa Alpa Berturut-turut (Early Warning) ----------
+  const consecutiveAlpaWarnings = React.useMemo(() => {
+    const warnings: { student: Student; className: string; streak: number }[] = [];
+    students.forEach(s => {
+      const studentJournals = journals
+        .filter(j => j.classId === s.classId && j.attendance?.[s.id])
+        .sort((a, b) => b.date.localeCompare(a.date)); // terbaru dulu
+
+      let streak = 0;
+      for (const j of studentJournals) {
+        if (j.attendance[s.id] === 'alpa') streak++;
+        else break;
+      }
+      if (streak >= 3) {
+        const className = classes.find(c => c.id === s.classId)?.name || '-';
+        warnings.push({ student: s, className, streak });
+      }
+    });
+    return warnings.sort((a, b) => b.streak - a.streak);
+  }, [students, journals, classes]);
+
+  // ---------- Analitik: Guru Belum Isi Jurnal 7 Hari Terakhir ----------
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const sevenDaysAgoStr = sevenDaysAgo.toISOString().slice(0, 10);
+  const inactiveTeachers = activeTeachers.filter(t => {
+    const hasRecentJournal = journals.some(j => j.teacherId === t.id && j.date >= sevenDaysAgoStr);
+    return !hasRecentJournal;
+  });
 
   return (
     <div className="space-y-6">
@@ -173,6 +218,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Analitik: Tren Kehadiran 14 Hari + Guru Belum Isi Jurnal */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Tren Kehadiran 14 Hari Terakhir */}
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <TrendingUp size={18} className="text-emerald-600 dark:text-emerald-400" />
+            <span>Tren Kehadiran 14 Hari Terakhir</span>
+          </h3>
+          <div className="flex items-end gap-1.5 h-32">
+            {attendanceTrend.map(d => (
+              <div key={d.date} className="flex-1 flex flex-col items-center justify-end h-full gap-1" title={`${d.date}: ${d.rate !== null ? d.rate + '%' : 'Tidak ada data'}`}>
+                <div className="w-full flex-1 flex items-end">
+                  <div
+                    className={`w-full rounded-t-md transition-all ${d.rate === null ? 'bg-slate-100 dark:bg-slate-800' : d.rate >= 90 ? 'bg-emerald-400 dark:bg-emerald-600' : d.rate >= 75 ? 'bg-amber-400 dark:bg-amber-600' : 'bg-rose-400 dark:bg-rose-600'}`}
+                    style={{ height: d.rate !== null ? `${Math.max(d.rate, 4)}%` : '4%' }}
+                  ></div>
+                </div>
+                <span className="text-[8px] text-slate-400 dark:text-slate-500 rotate-0">{d.date.slice(8, 10)}/{d.date.slice(5, 7)}</span>
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400"></span> ≥90%</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400"></span> 75-89%</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400"></span> &lt;75%</span>
+            <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-200 dark:bg-slate-700"></span> Tidak ada jurnal</span>
+          </div>
+        </div>
+
+        {/* Guru Belum Isi Jurnal 7 Hari Terakhir */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <CalendarX size={18} className="text-rose-600 dark:text-rose-400" />
+            <span>Guru Belum Isi Jurnal (7 Hari)</span>
+          </h3>
+          {inactiveTeachers.length === 0 ? (
+            <p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5 py-4">
+              <CheckCircle size={14} /> Semua guru aktif mengisi jurnal.
+            </p>
+          ) : (
+            <div className="space-y-1.5 max-h-56 overflow-y-auto">
+              {inactiveTeachers.map(t => (
+                <div key={t.id} className="flex items-center justify-between gap-2 p-2 bg-rose-50 dark:bg-rose-950/30 rounded-lg">
+                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{t.name}</span>
+                  <button
+                    onClick={() => onSendReminder(t)}
+                    className="shrink-0 p-1 text-rose-600 dark:text-rose-400 hover:text-rose-800 cursor-pointer"
+                    title="Kirim pengingat"
+                  >
+                    <Send size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Siswa dengan Alpa Berturut-turut (Early Warning) */}
+      {consecutiveAlpaWarnings.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-rose-200 dark:border-rose-900 shadow-xs space-y-3">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <AlertTriangle size={18} className="text-rose-600 dark:text-rose-400" />
+            <span>Peringatan Dini: Siswa Alpa Berturut-turut</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {consecutiveAlpaWarnings.map(w => (
+              <div key={w.student.id} className="flex items-center justify-between gap-2 p-3 bg-rose-50 dark:bg-rose-950/30 rounded-xl border border-rose-100 dark:border-rose-900">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{w.student.name}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">Kelas {w.className}</p>
+                </div>
+                <span className="shrink-0 text-[10px] font-bold px-2 py-1 rounded-lg bg-rose-600 text-white">
+                  {w.streak}x Alpa
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Teacher Status & Quick Reminder Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
