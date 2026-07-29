@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Target, Plus, Trash2, Search, BookOpen, FileDown, UploadCloud } from 'lucide-react';
+import { Target, Plus, Trash2, Search, BookOpen, FileDown, UploadCloud, CheckCircle2 } from 'lucide-react';
 import { LearningObjective, User } from '../../types';
 import { StorageService } from '../../services/storageService';
 import { ImportUtils } from '../../utils/importUtils';
@@ -30,6 +30,7 @@ export const TpManagement: React.FC<TpManagementProps> = ({
 
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('ALL');
+  const [showCompleted, setShowCompleted] = useState(false);
   
   // New TP Modal
   const [showAddModal, setShowAddModal] = useState(false);
@@ -47,8 +48,11 @@ export const TpManagement: React.FC<TpManagementProps> = ({
     const matchesSearch = tp.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           tp.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = subjectFilter === 'ALL' || tp.subject === subjectFilter;
-    return matchesSearch && matchesSubject;
+    const matchesCompleted = showCompleted || !tp.completed;
+    return matchesSearch && matchesSubject && matchesCompleted;
   }).sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric: true, sensitivity: 'base' }));
+
+  const completedCount = scopedLearningObjectives.filter(tp => tp.completed).length;
 
   const handleAddTp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +80,11 @@ export const TpManagement: React.FC<TpManagementProps> = ({
       await StorageService.deleteLearningObjective(id);
       onRefresh();
     }
+  };
+
+  const handleToggleCompleted = async (tp: LearningObjective) => {
+    await StorageService.saveLearningObjectives([{ ...tp, completed: !tp.completed }]);
+    onRefresh();
   };
 
   const handleImportTp = async (file: File | null) => {
@@ -193,6 +202,17 @@ export const TpManagement: React.FC<TpManagementProps> = ({
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
+
+        <button
+          onClick={() => setShowCompleted(v => !v)}
+          className={`px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer border ${
+            showCompleted
+              ? 'bg-slate-700 text-white border-slate-700'
+              : 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          {showCompleted ? 'Sembunyikan yang Selesai' : `Tampilkan yang Selesai (${completedCount})`}
+        </button>
       </div>
 
       {/* TP List Table */}
@@ -216,18 +236,27 @@ export const TpManagement: React.FC<TpManagementProps> = ({
               </tr>
             ) : (
               filteredTps.map(tp => (
-                <tr key={tp.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/60">
+                <tr key={tp.id} className={`hover:bg-slate-50/80 dark:hover:bg-slate-800/60 ${tp.completed ? 'opacity-50' : ''}`}>
                   <td className="px-4 py-3 font-mono font-bold text-indigo-700">{tp.code}</td>
                   <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white">{tp.subject}</td>
                   <td className="px-4 py-3 font-bold text-slate-600 dark:text-slate-400 dark:text-slate-500">Kelas {tp.grade}</td>
-                  <td className="px-4 py-3 text-slate-700 leading-relaxed dark:text-slate-300">{tp.description}</td>
+                  <td className={`px-4 py-3 text-slate-700 leading-relaxed dark:text-slate-300 ${tp.completed ? 'line-through' : ''}`}>{tp.description}</td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => handleDeleteTp(tp.id)}
-                      className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => handleToggleCompleted(tp)}
+                        title={tp.completed ? 'Tandai belum selesai' : 'Tandai sudah selesai'}
+                        className={`p-1 transition cursor-pointer ${tp.completed ? 'text-emerald-600 hover:text-slate-400' : 'text-slate-400 hover:text-emerald-600 dark:text-slate-500'}`}
+                      >
+                        <CheckCircle2 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTp(tp.id)}
+                        className="p-1 text-slate-400 hover:text-rose-600 transition cursor-pointer dark:text-slate-500 dark:text-slate-400"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

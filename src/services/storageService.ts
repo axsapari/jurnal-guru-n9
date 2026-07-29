@@ -61,10 +61,10 @@ const studentToDb = (s: Student) => ({
 });
 
 const tpFromDb = (r: any): LearningObjective => ({
-  id: r.id, subject: r.subject, grade: r.grade, code: r.code, description: r.description,
+  id: r.id, subject: r.subject, grade: r.grade, code: r.code, description: r.description, completed: r.completed ?? false,
 });
 const tpToDb = (t: LearningObjective) => ({
-  id: t.id, subject: t.subject, grade: t.grade, code: t.code, description: t.description,
+  id: t.id, subject: t.subject, grade: t.grade, code: t.code, description: t.description, completed: t.completed ?? false,
 });
 
 const journalFromDb = (r: any): JournalEntry => ({

@@ -65,7 +65,8 @@ create table if not exists learning_objectives (
   subject text not null,
   grade text not null,
   code text not null,
-  description text default ''
+  description text default '',
+  completed boolean default false
 );
 
 -- 6. Jurnal Harian

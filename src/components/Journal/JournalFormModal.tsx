@@ -323,6 +323,7 @@ export const JournalFormModal: React.FC<JournalFormModalProps> = ({
     .filter(tp => {
       const matchesClassSubject = tp.subject.toLowerCase() === subject.toLowerCase() && tp.grade === activeClass?.grade;
       if (!matchesClassSubject) return false;
+      if (tp.completed) return false; // TP yang sudah ditandai selesai disembunyikan supaya lebih mudah cari yang aktif
       if (!tpSearchQuery.trim()) return true;
       const q = tpSearchQuery.toLowerCase();
       return tp.code.toLowerCase().includes(q) || tp.description.toLowerCase().includes(q);

@@ -56,6 +56,7 @@ export interface LearningObjective {
   grade: string;
   code: string; // e.g. "TP.7.1"
   description: string;
+  completed?: boolean; // TP yang sudah selesai/terlampaui, disembunyikan dari pilihan default di Input Jurnal
 }
 
 export type AttendanceStatus = 'hadir' | 'sakit' | 'izin' | 'alpa';

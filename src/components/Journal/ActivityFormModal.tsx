@@ -31,6 +31,9 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+
   useEscapeKey(isOpen && !isSubmitting, onClose);
 
   useEffect(() => {
@@ -56,9 +59,6 @@ export const ActivityFormModal: React.FC<ActivityFormModalProps> = ({ isOpen, on
     setDescription('');
     setPhotoUrl('');
   };
-
-  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
 
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
