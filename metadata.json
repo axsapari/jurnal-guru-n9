@@ -1,0 +1,6 @@
+{
+  "name": "Aplikasi Jurnal Harian Guru",
+  "description": "Aplikasi jurnal harian guru terpadu dengan absensi siswa, catatan kejadian, foto Drive, TP, rekapitulasi laporan Kop Surat PDF/Excel, notifikasi pengingat, dan mode offline.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
